@@ -1,0 +1,406 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Front tumoral en spatial</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap">
+<style>
+/* Layout : une coupe de mélanome qu'on nettoie, découpe en domaines, déconvolue puis lit au niveau du front tumoral */
+:root {
+  --bg: #F2F4F6; --panel: #FFFFFF; --ink: #142033; --muted: #566274; --line: #D7DDE4;
+  --accent: #C25E1C; --accent-soft: #F6E3D5; --grid: #E6EAEF; --slide: #E9ECF0;
+  --he-bg: #F7F1F4; --he-tum: #5B3A55; --he-lym: #2E2A6B; --he-str: #E7A9C2; --he-epi: #B8679A; --he-nec: #D9C6CF;
+  --c1: #2E6FA8; --c2: #D9702A; --c3: #2A9D8F; --c4: #7A5BA6; --c5: #B8901C; --c6: #C8557A;
+  --c7: #5C6B7A; --c8: #5E9E5A; --c9: #9C5B33; --c10: #3FA7D6; --c11: #E07A5F; --c12: #8D6CAB;
+  --display: "Source Serif 4", Georgia, serif;
+  --body: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0F1622; --panel: #172133; --ink: #E8EDF3; --muted: #A3AFBF; --line: #2A3850;
+    --accent: #F0954F; --accent-soft: #3A2A1F; --grid: #223047; --slide: #1B2638;
+    --he-bg: #2A2230; --he-tum: #B38AAE; --he-lym: #8C86E0; --he-str: #8A4E6A; --he-epi: #C27BA8; --he-nec: #5B4C55;
+    --c1: #6FA8DA; --c2: #F0954F; --c3: #4FC1B2; --c4: #A88BD1; --c5: #D8B444; --c6: #E07FA0;
+    --c7: #93A1B1; --c8: #86C281; --c9: #CC8B62; --c10: #6CC4EC; --c11: #F29A82; --c12: #B497D3;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0F1622; --panel: #172133; --ink: #E8EDF3; --muted: #A3AFBF; --line: #2A3850;
+  --accent: #F0954F; --accent-soft: #3A2A1F; --grid: #223047; --slide: #1B2638;
+  --he-bg: #2A2230; --he-tum: #B38AAE; --he-lym: #8C86E0; --he-str: #8A4E6A; --he-epi: #C27BA8; --he-nec: #5B4C55;
+  --c1: #6FA8DA; --c2: #F0954F; --c3: #4FC1B2; --c4: #A88BD1; --c5: #D8B444; --c6: #E07FA0;
+  --c7: #93A1B1; --c8: #86C281; --c9: #CC8B62; --c10: #6CC4EC; --c11: #F29A82; --c12: #B497D3;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 64px;
+}
+.wrap { max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; gap: 40px; }
+header.top { padding-block: 48px 8px; display: flex; flex-direction: column; gap: 14px; }
+.eyebrow { font-family: var(--mono); font-size: 12.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+h1 { font-family: var(--display); font-weight: 600; font-size: clamp(34px, 5vw, 54px); line-height: 1.05; margin: 0; text-wrap: balance; }
+.lede { max-width: 66ch; color: var(--muted); font-size: 17.5px; margin: 0 0 10px; }
+.scenario { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 28px; align-items: start; }
+nav.toc { display: flex; flex-wrap: wrap; gap: 8px; }
+nav.toc a { font-family: var(--mono); font-size: 13px; color: var(--ink); text-decoration: none; border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; background: var(--panel); }
+nav.toc a:hover, nav.toc a:focus-visible { border-color: var(--accent); color: var(--accent); outline: none; }
+section.bench { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 28px; display: flex; flex-direction: column; gap: 20px; scroll-margin-top: 16px; }
+.bench-head { display: flex; flex-direction: column; gap: 6px; }
+.bench-head .num { font-family: var(--mono); font-size: 12.5px; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+h2 { font-family: var(--display); font-weight: 600; font-size: clamp(24px, 3vw, 32px); line-height: 1.15; margin: 0; text-wrap: balance; }
+.bench-head p { margin: 0; max-width: 76ch; color: var(--muted); }
+.bench-body { display: grid; grid-template-columns: 290px minmax(0, 1fr); gap: 28px; align-items: start; }
+.controls { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.ctl { display: flex; flex-direction: column; gap: 6px; }
+.ctl label, .ctl .lab { font-size: 14px; font-weight: 500; display: flex; justify-content: space-between; gap: 8px; }
+.ctl output { font-family: var(--mono); font-size: 13.5px; color: var(--accent); font-variant-numeric: tabular-nums; }
+.hint { font-size: 13px; color: var(--muted); }
+input[type="range"] { width: 100%; accent-color: var(--accent); }
+select { font: 14px var(--body); padding: 7px 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); width: 100%; }
+.check { display: flex; gap: 8px; align-items: center; font-size: 14px; }
+.check input { accent-color: var(--accent); width: 16px; height: 16px; }
+.seg { display: flex; flex-wrap: wrap; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.seg button { flex: 1 1 auto; font: 500 13px var(--body); padding: 7px 6px; border: 0; background: transparent; color: var(--ink); cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); }
+.seg button:focus-visible, .btn:focus-visible, input:focus-visible, select:focus-visible, .mlist button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.btn { font: 500 14px var(--body); padding: 8px 14px; border-radius: 8px; border: 1px solid var(--accent); background: var(--accent); color: var(--panel); cursor: pointer; align-self: flex-start; }
+.btn:hover { filter: brightness(1.08); }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
+.stat { border-top: 2px solid var(--line); padding-top: 6px; display: flex; flex-direction: column; gap: 2px; }
+.stat .k { font-size: 12.5px; color: var(--muted); }
+.stat .v { font-family: var(--mono); font-size: 20px; font-variant-numeric: tabular-nums; }
+.stat.hl { border-top-color: var(--accent); }
+.figs { display: grid; gap: 16px; min-width: 0; }
+.figs.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+figure { margin: 0; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+figcaption { font-size: 13.5px; color: var(--muted); }
+canvas { width: 100%; display: block; border-radius: 8px; background: var(--panel); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.look { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; }
+.look > div { border-left: 3px solid var(--accent); padding: 4px 0 4px 14px; font-size: 15px; }
+.look > div.ask { border-left-color: var(--c1); }
+.look b { font-weight: 600; }
+.look p { margin: 0 0 6px; }
+.mlist { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+.mlist button { font: 13px var(--mono); text-align: left; padding: 5px 8px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer; display: flex; justify-content: space-between; gap: 6px; }
+.mlist button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+.mlist span { color: var(--muted); }
+.reveal { border: 1px solid var(--accent); background: var(--accent-soft); border-radius: 12px; padding: 16px 18px; font-size: 15.5px; }
+.reveal b { color: var(--accent); }
+.busy { font-family: var(--mono); font-size: 12.5px; color: var(--accent); min-height: 1.4em; }
+footer { color: var(--muted); font-size: 13.5px; max-width: 84ch; }
+@media (max-width: 860px) {
+  .bench-body, .scenario { grid-template-columns: minmax(0, 1fr); }
+  .figs.two { grid-template-columns: minmax(0, 1fr); }
+  section.bench { padding: 20px; }
+}
+</style>
+
+<div class="wrap">
+<header class="top">
+  <span class="eyebrow">M2 GGB · exercice interactif · transcriptomique spatiale</span>
+  <h1>Front tumoral en spatial</h1>
+  <div class="scenario">
+    <div>
+      <p class="lede">Une coupe de mélanome cutané, analysée par transcriptomique spatiale par capture : une lame couverte de spots à code-barres, chacun mesurant le transcriptome de quelques cellules. On veut comprendre ce qui se passe là où les lymphocytes T rencontrent la tumeur. Mais la lame brute contient aussi des spots hors tissu, une zone nécrotique et un pli : il faut d'abord nettoyer.</p>
+      <p class="hint">Données simulées : 3 120 spots, 120 gènes, 7 types cellulaires. Coloration HE simulée à partir de la composition réelle de chaque spot.</p>
+    </div>
+    <figure>
+      <canvas id="cvHE" height="300" aria-label="Coupe colorée en HE simulée"></canvas>
+      <div class="legend"><span><i style="background:var(--he-tum)"></i>Tumeur</span><span><i style="background:var(--he-lym)"></i>Lymphocytes</span><span><i style="background:var(--he-str)"></i>Stroma</span><span><i style="background:var(--he-epi)"></i>Épiderme</span><span><i style="background:var(--he-nec)"></i>Nécrose</span></div>
+    </figure>
+  </div>
+  <nav class="toc" aria-label="Étapes">
+    <a href="#qc">1 · Nettoyer</a><a href="#dom">2 · Domaines</a><a href="#deconv">3 · Déconvolution</a><a href="#svg">4 · Gènes spatiaux</a><a href="#front">5 · Le front</a>
+  </nav>
+</header>
+
+<!-- 1 QC -->
+<section class="bench" id="qc">
+  <div class="bench-head">
+    <span class="num">Étape 1 · Nettoyage</span>
+    <h2>Quels spots garder ?</h2>
+    <p>Chaque spot a un nombre d'UMI, un nombre de gènes détectés et une part de transcrits mitochondriaux. Repérez sur la lame les spots hors tissu, la nécrose et le pli, puis appliquez vos filtres : la suite est recalculée sur les spots conservés.</p>
+  </div>
+  <div class="bench-body">
+    <div class="controls">
+      <label class="check"><input type="checkbox" id="qTissue" checked> Retirer les spots hors tissu (détection sur l'image)</label>
+      <div class="ctl"><label for="qMin">UMI minimum <output id="qMinOut">0</output></label><input type="range" id="qMin" min="0" max="2500" step="50" value="0"></div>
+      <div class="ctl"><label for="qMax">UMI maximum <output id="qMaxOut">20000</output></label><input type="range" id="qMax" min="3000" max="20000" step="250" value="20000"></div>
+      <div class="ctl"><label for="qMito">% mitochondrial maximum <output id="qMitoOut">50</output></label><input type="range" id="qMito" min="3" max="50" step="1" value="50"></div>
+      <div class="ctl">
+        <span class="lab">Carte</span>
+        <div class="seg" role="group" aria-label="Variable affichée sur la lame">
+          <button type="button" id="mKeep" aria-pressed="true">Filtre</button>
+          <button type="button" id="mUmi" aria-pressed="false">UMI</button>
+          <button type="button" id="mMito" aria-pressed="false">% mito</button>
+        </div>
+      </div>
+      <button class="btn" id="qApply" type="button">Appliquer et recalculer</button>
+      <span class="busy" id="busy" role="status"></span>
+      <div class="stats">
+        <div class="stat hl"><span class="k">Spots conservés</span><span class="v" id="qKept">–</span></div>
+        <div class="stat"><span class="k">Nécrose retirée</span><span class="v" id="qNec">–</span></div>
+        <div class="stat"><span class="k">Pli retiré</span><span class="v" id="qFold">–</span></div>
+      </div>
+    </div>
+    <div class="figs two">
+      <figure><canvas id="cvQcMap" height="360" aria-label="Lame colorée selon le filtre"></canvas><div class="legend" id="qcLeg"></div></figure>
+      <figure><canvas id="cvQcSc" height="360" aria-label="UMI contre pourcentage mitochondrial"></canvas><div class="legend"><span><i style="background:var(--c7)"></i>Hors tissu</span><span><i style="background:var(--c3)"></i>Tissu</span><span><i style="background:var(--c2)"></i>Nécrose</span><span><i style="background:var(--c4)"></i>Pli</span></div></figure>
+    </div>
+  </div>
+  <div class="look">
+    <div class="ask"><p><b>À vous :</b> au départ, rien n'est filtré. Trouvez un réglage qui retire la nécrose (beaucoup de mitochondrial, peu d'UMI) et le pli (trop d'UMI : deux épaisseurs de tissu sous un spot), sans amputer la tumeur.</p></div>
+    <div><p><b>À observer :</b> contrairement au single-cell, on voit où sont les spots retirés. Un filtre qui fait des « trous » dans une région saine est trop strict. La nécrose est une vraie biologie : on la retire ici parce qu'elle n'aide pas à étudier le front.</p></div>
+  </div>
+</section>
+
+<!-- 2 DOMAINES -->
+<section class="bench" id="dom">
+  <div class="bench-head">
+    <span class="num">Étape 2 · Normalisation et domaines spatiaux</span>
+    <h2>Découper la coupe en régions</h2>
+    <p>Normalisation log CP10k, gènes variables, ACP, graphe de voisins et clustering de Louvain, comme en single-cell. Le lissage spatial mélange l'expression de chaque spot avec celle de ses 6 voisins sur la lame avant le clustering.</p>
+  </div>
+  <div class="bench-body">
+    <div class="controls">
+      <div class="ctl"><label for="dLam">Lissage spatial λ <output id="dLamOut">0.0</output></label><input type="range" id="dLam" min="0" max="0.8" step="0.05" value="0"><span class="hint">0 : expression seule ; 0,8 : surtout les voisins.</span></div>
+      <div class="ctl"><label for="dRes">Résolution <output id="dResOut">0.3</output></label><input type="range" id="dRes" min="0.1" max="2" step="0.1" value="0.3"></div>
+      <div class="stats">
+        <div class="stat"><span class="k">Domaines</span><span class="v" id="dN">–</span></div>
+        <div class="stat hl"><span class="k">ARI vs régions vraies</span><span class="v" id="dAri">–</span></div>
+      </div>
+    </div>
+    <div class="figs two">
+      <figure><canvas id="cvDom" height="360" aria-label="Domaines spatiaux sur la lame"></canvas><div class="legend" id="domLeg"></div></figure>
+      <figure><canvas id="cvTruth" height="360" aria-label="Régions vraies simulées"></canvas><div class="legend" id="truthLeg"></div></figure>
+    </div>
+  </div>
+  <div class="look">
+    <div class="ask"><p><b>À vous :</b> sans lissage, les domaines sont-ils des régions continues ? Augmentez λ : qu'est-ce qui s'améliore, et qu'est-ce qu'on risque de perdre si on lisse trop ?</p></div>
+    <div><p><b>À observer :</b> le lissage rend les domaines plus continus et l'accord avec l'anatomie s'améliore. Trop de lissage efface les structures fines : le front, large de quelques spots, se dissout dans ses voisins.</p></div>
+  </div>
+</section>
+
+<!-- 3 DECONV -->
+<section class="bench" id="deconv">
+  <div class="bench-head">
+    <span class="num">Étape 3 · Déconvolution</span>
+    <h2>Qui est dans chaque spot ?</h2>
+    <p>Chaque spot contient plusieurs cellules. Avec les profils de référence de chaque type (issus d'un atlas single-cell), on estime les proportions par moindres carrés non négatifs.</p>
+  </div>
+  <div class="bench-body">
+    <div class="controls">
+      <div class="ctl"><label for="cType">Type cellulaire</label><select id="cType"></select></div>
+      <div class="stats">
+        <div class="stat hl"><span class="k">Corrélation estimé / vrai</span><span class="v" id="cR">–</span></div>
+      </div>
+      <span class="hint">La référence vient d'un autre jeu de données (profils légèrement différents) ; on connaît ici la vraie composition, ce qui permet de vérifier.</span>
+    </div>
+    <div class="figs two">
+      <figure><canvas id="cvDecMap" height="360" aria-label="Proportion estimée du type choisi"></canvas><figcaption>Proportion estimée sur la lame (clair : 0, foncé : maximum).</figcaption></figure>
+      <figure><canvas id="cvDecSc" height="360" aria-label="Proportion estimée contre vraie"></canvas><figcaption>Chaque point est un spot : proportion estimée contre vraie.</figcaption></figure>
+    </div>
+  </div>
+  <div class="look">
+    <div class="ask"><p><b>À vous :</b> regardez les lymphocytes T. Où sont-ils par rapport à la tumeur, à gauche et à droite de la coupe ?</p></div>
+    <div><p><b>À observer :</b> à gauche, les T bordent et pénètrent la tumeur (profil « inflammé »). À droite, ils restent à distance dans le stroma (profil « exclu »). Un amas de lymphocytes B et T dans le derme évoque une structure lymphoïde tertiaire.</p></div>
+  </div>
+</section>
+
+<!-- 4 SVG -->
+<section class="bench" id="svg">
+  <div class="bench-head">
+    <span class="num">Étape 4 · Gènes à variation spatiale</span>
+    <h2>Quels gènes dessinent la coupe ?</h2>
+    <p>Indice de Moran : un gène dont l'expression ressemble à celle de ses voisins sur la lame a un indice proche de 1 ; un gène réparti au hasard, proche de 0.</p>
+  </div>
+  <div class="bench-body">
+    <div class="controls">
+      <span class="lab" style="font-size:14px;font-weight:500">Classement (indice de Moran)</span>
+      <div class="mlist" id="mList" role="group" aria-label="Gènes classés par indice de Moran"></div>
+      <span class="hint">Les 12 premiers, puis les 2 derniers.</span>
+    </div>
+    <div class="figs">
+      <figure><canvas id="cvGene" height="400" aria-label="Expression du gène choisi sur la lame"></canvas><figcaption id="geneCap">Expression normalisée (log CP10k).</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<!-- 5 FRONT -->
+<section class="bench" id="front">
+  <div class="bench-head">
+    <span class="num">Étape 5 · Le front tumoral</span>
+    <h2>Ce qui se passe au contact des lymphocytes</h2>
+    <p>À partir des proportions de l'étape 3, on calcule pour chaque spot sa distance (en spots) au bord de la tumeur : négative dedans, positive dehors. On trace l'expression le long de cette distance, séparément à gauche (côté inflammé) et à droite (côté exclu).</p>
+  </div>
+  <div class="bench-body">
+    <div class="controls">
+      <div class="ctl"><label for="fGene">Gène</label><select id="fGene"></select></div>
+      <div class="ctl"><label for="fW">Largeur du front (spots) <output id="fWOut">2</output></label><input type="range" id="fW" min="1" max="5" step="1" value="2"></div>
+      <div class="stats">
+        <div class="stat"><span class="k">Cœur tumoral</span><span class="v" id="fCore">–</span></div>
+        <div class="stat hl"><span class="k">Front inflammé</span><span class="v" id="fFi">–</span></div>
+        <div class="stat"><span class="k">Front exclu</span><span class="v" id="fFe">–</span></div>
+      </div>
+      <span class="hint">Expression moyenne du gène (log CP10k) dans chaque zone.</span>
+    </div>
+    <div class="figs two">
+      <figure><canvas id="cvFrontMap" height="360" aria-label="Lame avec le front tumoral surligné"></canvas><div class="legend"><span><i style="background:var(--c2)"></i>Front inflammé</span><span><i style="background:var(--c1)"></i>Front exclu</span><span>fond : expression du gène</span></div></figure>
+      <figure><canvas id="cvProfile" height="360" aria-label="Profils le long de la distance au bord tumoral"></canvas><div class="legend"><span><i style="background:var(--c2)"></i>gène, côté inflammé</span><span><i style="background:var(--c1)"></i>gène, côté exclu</span><span>pointillés : proportions de tumeur et de T (côté inflammé)</span></div></figure>
+    </div>
+  </div>
+  <div class="reveal" id="reveal"></div>
+  <div class="look">
+    <div class="ask"><p><b>À vous :</b> comparez CD274 (PD-L1), CXCL9, PDCD1 et MLANA. Lesquels culminent au front ? Pourquoi seulement du côté inflammé ? Qu'est-ce que cela suggère pour un traitement anti-PD-1 ?</p></div>
+    <div><p><b>À observer :</b> PD-L1 et CXCL9 sont exprimés par les cellules tumorales au contact des T, pas au cœur de la tumeur ni du côté exclu : c'est une réponse à l'IFN-γ. En face, les T du front expriment PD-1, LAG3 et TIM-3 : ils sont épuisés. Le bulk de la tumeur entière aurait moyenné ce liseré avec tout le reste.</p></div>
+  </div>
+</section>
+
+<footer>Données simulées pour l'enseignement : géométrie de coupe, composition par spot, comptes de Poisson, artefacts (hors tissu, nécrose, pli). Le programme d'interface (induction de PD-L1, CXCL9, CXCL10, IDO1 par l'IFN-γ au contact des lymphocytes T, épuisement PD-1/LAG3/TIM-3 des T) reprend un mécanisme décrit dans le mélanome (résistance immunitaire adaptative). Méthodes : log CP10k, gènes variables, ACP, graphe SNN + Louvain avec lissage par les voisins spatiaux, déconvolution par moindres carrés non négatifs, indice de Moran, distance au bord par parcours du graphe hexagonal.</footer>
+</div>
+
+<script>
+(() => {
+"use strict";
+const $=id=>document.getElementById(id);
+/* ---------- outils ---------- */
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function gauss(rand){let s=null;return function(){if(s!==null){const v=s;s=null;return v;}let u=0;while(u===0)u=rand();const v=rand();const r=Math.sqrt(-2*Math.log(u));s=r*Math.sin(2*Math.PI*v);return r*Math.cos(2*Math.PI*v);};}
+function ari(a,b){const n=a.length,ka=new Map(),kb=new Map();a.forEach(v=>{if(!ka.has(v))ka.set(v,ka.size);});b.forEach(v=>{if(!kb.has(v))kb.set(v,kb.size);});const T=Array.from({length:ka.size},()=>new Float64Array(kb.size));for(let i=0;i<n;i++)T[ka.get(a[i])][kb.get(b[i])]++;const c2=x=>x*(x-1)/2;let s=0;const ra=new Float64Array(ka.size),rb=new Float64Array(kb.size);T.forEach((r,i)=>r.forEach((v,j)=>{s+=c2(v);ra[i]+=v;rb[j]+=v;}));let sa=0,sb=0;ra.forEach(v=>sa+=c2(v));rb.forEach(v=>sb+=c2(v));const e=sa*sb/c2(n),mx=(sa+sb)/2;return mx===e?0:(s-e)/(mx-e);}
+function corr(a,b){const n=a.length;let ma=0,mb=0;for(let i=0;i<n;i++){ma+=a[i]/n;mb+=b[i]/n;}let sab=0,sa=0,sb=0;for(let i=0;i<n;i++){sab+=(a[i]-ma)*(b[i]-mb);sa+=(a[i]-ma)**2;sb+=(b[i]-mb)**2;}return sab/Math.sqrt(sa*sb||1);}
+function pcaG(rows,m){const n=rows.length,p=rows[0].length,mean=new Float64Array(p);for(const r of rows)for(let j=0;j<p;j++)mean[j]+=r[j]/n;const C=new Float64Array(p*p),tmp=new Float64Array(p);for(const r of rows){for(let j=0;j<p;j++)tmp[j]=r[j]-mean[j];for(let a=0;a<p;a++){const va=tmp[a];if(va===0)continue;const off=a*p;for(let b=a;b<p;b++)C[off+b]+=va*tmp[b];}}for(let a=0;a<p;a++)for(let b=a+1;b<p;b++)C[b*p+a]=C[a*p+b];let tr=0;for(let a=0;a<p;a++)tr+=C[a*p+a];m=Math.min(m,p);const rand=mulberry32(3),vecs=[],vals=[];for(let c=0;c<m;c++){const v=new Float64Array(p);for(let j=0;j<p;j++)v[j]=rand()-0.5;let lam=0;for(let it=0;it<200;it++){const w=new Float64Array(p);for(let a=0;a<p;a++){let s=0;const off=a*p;for(let b=0;b<p;b++)s+=C[off+b]*v[b];w[a]=s;}for(let q=0;q<vecs.length;q++){let d=0;for(let j=0;j<p;j++)d+=vecs[q][j]*v[j];for(let j=0;j<p;j++)w[j]-=vals[q]*d*vecs[q][j];}let nr=0;for(let j=0;j<p;j++)nr+=w[j]*w[j];nr=Math.sqrt(nr)||1;let dl=0;for(let j=0;j<p;j++){const nv=w[j]/nr;dl+=Math.abs(nv-v[j]);v[j]=nv;}lam=nr;if(dl<1e-6)break;}vecs.push(v);vals.push(lam);}return{scores:rows.map(r=>vecs.map(v=>{let s=0;for(let j=0;j<p;j++)s+=(r[j]-mean[j])*v[j];return s;})),varExp:vals.map(l=>l/tr)};}
+function shuffle(a,rand){for(let i=a.length-1;i>0;i--){const j=Math.floor(rand()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function louvain(adj,gamma,rand){let graph=adj;const n0=adj.length;let member=Int32Array.from({length:n0},(_,i)=>i);for(let level=0;level<20;level++){const N=graph.length,k=new Float64Array(N);let m2=0;for(let i=0;i<N;i++){for(const w of graph[i].values())k[i]+=w;m2+=k[i];}if(m2===0)break;const comm=Int32Array.from({length:N},(_,i)=>i),tot=Float64Array.from(k);let improved=false,moved=true,pass=0;const order=shuffle([...Array(N).keys()],rand);while(moved&&pass<30){moved=false;pass++;for(const i of order){const ci=comm[i],nb=new Map();for(const[j,w]of graph[i]){if(j===i)continue;const c=comm[j];nb.set(c,(nb.get(c)||0)+w);}tot[ci]-=k[i];let best=ci,bg=(nb.get(ci)||0)-gamma*tot[ci]*k[i]/m2;for(const[c,w]of nb){const g=w-gamma*tot[c]*k[i]/m2;if(g>bg+1e-12){bg=g;best=c;}}tot[best]+=k[i];if(best!==ci){comm[i]=best;moved=true;improved=true;}}}if(!improved)break;const re=new Map();for(let i=0;i<N;i++)if(!re.has(comm[i]))re.set(comm[i],re.size);for(let i=0;i<N;i++)comm[i]=re.get(comm[i]);for(let i=0;i<n0;i++)member[i]=comm[member[i]];const C=re.size,na=Array.from({length:C},()=>new Map());for(let i=0;i<N;i++)for(const[j,w]of graph[i]){const a=comm[i],b=comm[j];na[a].set(b,(na[a].get(b)||0)+w);}graph=na;if(C===N)break;}return Array.from(member);}
+/* ---------- dessin ---------- */
+function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim();}
+const CAT=()=>Array.from({length:12},(_,i)=>css("--c"+(i+1)));
+function hex(c){const m=c.replace("#","");return[parseInt(m.slice(0,2),16),parseInt(m.slice(2,4),16),parseInt(m.slice(4,6),16)];}
+function mix(a,b,u){return a.map((v,j)=>Math.round(v+(b[j]-v)*u));}
+function setup(cv){const dpr=window.devicePixelRatio||1,w=cv.clientWidth,h=parseInt(cv.getAttribute("height"),10);if(cv.width!==Math.round(w*dpr)||cv.height!==Math.round(h*dpr)){cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);cv.style.height=h+"px";}const g=cv.getContext("2d");g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,w,h);return{g,w,h};}
+function niceTicks(a,b,n=5){const span=b-a||1,step0=span/n,mag=Math.pow(10,Math.floor(Math.log10(step0))),st=[1,2,2.5,5,10].map(x=>x*mag).find(x=>span/x<=n)||10*mag;const t=[];for(let v=Math.ceil(a/st)*st;v<=b+1e-9;v+=st)t.push(+v.toFixed(10));return t;}
+function fmt(v){if(v===0)return"0";const a=Math.abs(v);if(a>=10)return v.toFixed(0);if(a>=1)return v.toFixed(1).replace(/\.0$/,"");return v.toFixed(2).replace(/0$/,"");}
+function axes(g,box,xr,yr,xl,yl,opt={}){const{x,y,w,h}=box;g.strokeStyle=css("--grid");g.lineWidth=1;g.fillStyle=css("--muted");g.font="12px "+css("--mono");const X=v=>x+(v-xr[0])/(xr[1]-xr[0])*w,Y=v=>y+h-(v-yr[0])/(yr[1]-yr[0])*h;g.textAlign="center";g.textBaseline="top";for(const t of niceTicks(xr[0],xr[1])){g.beginPath();g.moveTo(X(t),y);g.lineTo(X(t),y+h);g.stroke();g.fillText(opt.xfmt?opt.xfmt(t):fmt(t),X(t),y+h+6);}g.textAlign="right";g.textBaseline="middle";for(const t of niceTicks(yr[0],yr[1])){g.beginPath();g.moveTo(x,Y(t));g.lineTo(x+w,Y(t));g.stroke();g.fillText(fmt(t),x-6,Y(t));}g.strokeStyle=css("--line");g.strokeRect(x+.5,y+.5,w-1,h-1);g.fillStyle=css("--ink");g.font="13px "+css("--body");g.textAlign="center";g.textBaseline="bottom";if(xl)g.fillText(xl,x+w/2,y+h+38);if(yl){g.save();g.translate(x-44,y+h/2);g.rotate(-Math.PI/2);g.fillText(yl,0,0);g.restore();}return{X,Y};}
+function range(arr,pad=0.08){let a=Infinity,b=-Infinity;for(const v of arr){if(v<a)a=v;if(v>b)b=v;}const d=(b-a)||1;return[a-d*pad,b+d*pad];}
+const redraw=[];let rz=null;window.addEventListener("resize",()=>{clearTimeout(rz);rz=setTimeout(()=>redraw.forEach(f=>f()),120);});
+const mq=window.matchMedia("(prefers-color-scheme: dark)");mq.addEventListener&&mq.addEventListener("change",()=>redraw.forEach(f=>f()));
+new MutationObserver(()=>redraw.forEach(f=>f())).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+function seg(btns,cb){btns.forEach((b,i)=>b.addEventListener("click",()=>{btns.forEach((x,j)=>x.setAttribute("aria-pressed",i===j));cb(i);}));}
+
+/* ---------- géométrie de la lame ---------- */
+const NX=60,NY=52,SP=[];for(let j=0;j<NY;j++)for(let i=0;i<NX;i++)SP.push({i,j,x:i+(j%2?0.5:0),y:j*0.866});
+const N=SP.length,idxOf=(i,j)=>(i<0||j<0||i>=NX||j>=NY)?-1:j*NX+i;
+const NB=SP.map(s=>{const{i,j}=s,odd=j%2,d=odd?[[1,0],[-1,0],[0,-1],[1,-1],[0,1],[1,1]]:[[1,0],[-1,0],[-1,-1],[0,-1],[-1,1],[0,1]];return d.map(([a,b])=>idxOf(i+a,j+b)).filter(k=>k>=0);});
+const rand=mulberry32(77),r=gauss(rand);
+const CX=30,CY=22.5;
+SP.forEach(s=>{const dx=(s.x-CX)/27,dy=(s.y-CY)/19.5,th=Math.atan2(dy,dx);const rr=Math.sqrt(dx*dx+dy*dy)+0.05*Math.sin(5*th)+0.035*Math.sin(9*th+1.3);s.tissue=rr<1;});
+// épiderme : bande supérieure du tissu
+const ytop=new Float64Array(NX).fill(Infinity);SP.forEach(s=>{if(s.tissue)ytop[s.i]=Math.min(ytop[s.i],s.y);});
+SP.forEach(s=>{s.epi=s.tissue&&(s.y-ytop[s.i])<2.4;});
+// tumeur : somme de blobs
+const blobs=[[26,26,8.5,7.5,1],[36,20,6,5,0.9],[19,30,4.5,3.8,0.8]];
+SP.forEach(s=>{let f=0;for(const[bx,by,sx,sy,a]of blobs)f+=a*Math.exp(-(((s.x-bx)/sx)**2+((s.y-by)/sy)**2));s.tum=s.tissue&&!s.epi&&f>0.45;});
+// distance signée au bord tumoral (en pas de spot)
+function signedDist(isIn){const d=new Float64Array(N).fill(Infinity),q=[];for(let k=0;k<N;k++){if(!SP[k].tissue)continue;if(NB[k].some(n=>SP[n].tissue&&isIn[n]!==isIn[k])){d[k]=0.5;q.push(k);}}for(let h=0;h<q.length;h++){const k=q[h];for(const n of NB[k]){if(!SP[n].tissue||isIn[n]!==isIn[k])continue;if(d[n]>d[k]+1){d[n]=d[k]+1;q.push(n);}}}return Array.from(d,(v,k)=>isFinite(v)?(isIn[k]?-v:v):99);}
+const DTRUE=signedDist(SP.map(s=>s.tum));
+const sig=x=>1/(1+Math.exp(-x));
+const TLS=[11,13],NEC=[27.5,27];
+const TYPES=["Tumeur","Lymphocytes T","Lymphocytes B","Macrophages","Fibroblastes","Endothéliales","Kératinocytes"];
+SP.forEach((s,k)=>{s.inflam=sig((30-s.x)/1.3);const d=DTRUE[k];s.nec=s.tum&&Math.hypot(s.x-NEC[0],s.y-NEC[1])<2.6;s.fold=s.tissue&&Math.abs((s.x+s.y*1.1)-73)<0.9&&!s.epi;
+if(!s.tissue){s.frac=null;return;}const w=new Float64Array(7);const tumP=s.epi?0:sig(-d*1.6);const bandI=Math.exp(-((d-0.3)**2)/(2*1.6**2))*(d>-3.5?1:0.2),bandE=d>3?Math.exp(-((d-5)**2)/(2*1.0**2)):0;const tls=Math.exp(-((s.x-TLS[0])**2+(s.y-TLS[1])**2)/(2*2.2**2));
+w[0]=tumP*0.9;w[1]=0.03+0.55*(s.inflam*bandI+(1-s.inflam)*bandE)+0.35*tls;w[2]=0.01+0.55*tls;w[3]=0.05+0.12*Math.exp(-(d*d)/4)+(Math.abs(Math.hypot(s.x-NEC[0],s.y-NEC[1])-3.2)<1.2?0.25:0);w[4]=(1-tumP)*(s.epi?0.15:0.45);w[5]=0.06;w[6]=s.epi?0.85:0;for(let t=0;t<7;t++)w[t]=Math.max(0,w[t]*(1+0.25*r()));const z=w.reduce((a,b)=>a+b,0);s.frac=Array.from(w,v=>v/z);});
+// région vraie
+const REG=["Hors tissu","Épiderme","Stroma","Tumeur","Front","TLS","Nécrose"];
+SP.forEach((s,k)=>{const d=DTRUE[k];s.reg=!s.tissue?0:s.epi?1:s.nec?6:Math.hypot(s.x-TLS[0],s.y-TLS[1])<3?5:(d>=-1.5&&d<=1.5&&s.frac[1]>0.2)?4:s.tum?3:2;});
+
+/* ---------- gènes et comptes ---------- */
+const MARK=[["MLANA","PMEL","TYR","SOX10","MITF","S100B"],["CD3E","CD8A","GZMB","NKG7","CD2"],["MS4A1","CD79A","CD19"],["CD68","CD163","C1QA","LYZ"],["COL1A1","COL3A1","DCN","FAP"],["PECAM1","VWF","CDH5"],["KRT14","KRT5","KRT10"]];
+const IFNP=["CD274","IDO1","CXCL9","CXCL10","STAT1","HLA-DRA"],EXH=["PDCD1","LAG3","HAVCR2","TOX"],TLSP=["CXCL13","CCL19","CCL21","LAMP3"],PROL=["MKI67","TOP2A"],HYP=["VEGFA","CA9"],MITO=["MT-CO1","MT-CO2","MT-ND1","MT-ND4","MT-ATP6","MT-CYB"];const NBG=62;
+const GENES=[...MARK.flat(),...IFNP,...EXH,...TLSP,...PROL,...HYP,...MITO,...Array.from({length:NBG},(_,i)=>"G"+String(i+1).padStart(3,"0"))];
+const G=GENES.length,gi=Object.fromEntries(GENES.map((g,i)=>[g,i])),isMito=GENES.map(g=>g.startsWith("MT-")),NONMITO=[...Array(G).keys()].filter(g=>!isMito[g]);
+const LM=TYPES.map(()=>new Float64Array(G).fill(-4));
+for(let g=0;g<G;g++){if(GENES[g].startsWith("G")&&!GENES[g].startsWith("GZ")){const b=0.5+r();for(let t=0;t<7;t++)LM[t][g]=b+0.5*r();}}
+MARK.forEach((ms,t)=>ms.forEach(m=>{LM[t][gi[m]]=3+0.5*r();}));
+LM[0].forEach((_,g)=>{});LM[0][gi["HLA-DRA"]]=-1;LM[3][gi["HLA-DRA"]]=2.5;LM[2][gi["HLA-DRA"]]=2.5;LM[0][gi.STAT1]=0.5;LM[1][gi.STAT1]=0.8;LM[3][gi.CD274]=-0.5;LM[0][gi.MKI67]=1.2;LM[0][gi.TOP2A]=1.2;LM[1][gi.MKI67]=-0.5;LM[0][gi.VEGFA]=0.5;LM[5][gi.VEGFA]=0.8;
+const PROF=LM.map(lm=>{let z=0;const p=new Float64Array(G);for(let g=0;g<G;g++)if(!isMito[g]){p[g]=Math.exp(lm[g]);z+=p[g];}for(let g=0;g<G;g++)p[g]/=z;return p;});
+function poisson(l){if(l<30){const L=Math.exp(-l);let k=0,p=1;do{k++;p*=rand();}while(p>L);return k-1;}return Math.max(0,Math.round(l+Math.sqrt(l)*r()));}
+// champs lissés pour les programmes d'interface
+const Tf=SP.map(s=>s.frac?s.frac[1]:0),Uf=SP.map(s=>s.frac?s.frac[0]:0);
+function smooth(v,it){let a=v.slice();for(let t=0;t<it;t++){a=a.map((x,k)=>{let s=x,c=1;for(const n of NB[k]){s+=a[n];c++;}return s/c;});}return a;}
+const Tloc=smooth(Tf,2),Uloc=smooth(Uf,2);
+const ambient=new Float64Array(G);PROF.forEach((p,t)=>{for(let g=0;g<G;g++)ambient[g]+=p[g]*[0.4,0.1,0.05,0.08,0.25,0.05,0.07][t];});
+SP.forEach((s,k)=>{const p=new Float64Array(G);let L,fm;if(!s.tissue){for(let g=0;g<G;g++)p[g]=ambient[g];L=Math.exp(Math.log(180)+0.5*r());fm=0.05+0.04*rand();}else{for(let t=0;t<7;t++){const f=s.frac[t];if(f>0)for(let g=0;g<G;g++)p[g]+=f*PROF[t][g];}
+const ifn=s.frac[0]*Math.max(0,Math.min(1,(Tloc[k]-0.16)*5));for(const nm of IFNP)p[gi[nm]]+=0.006*ifn*(nm==="HLA-DRA"?0.6:1);const ex=s.frac[1]*Math.max(0,Math.min(1,(Uloc[k]-0.2)*2.5));for(const nm of EXH)p[gi[nm]]+=0.016*ex;const tl=Math.exp(-((s.x-TLS[0])**2+(s.y-TLS[1])**2)/(2*2.2**2));for(const nm of TLSP)p[gi[nm]]+=0.01*tl;
+if(s.tum&&DTRUE[k]<-3){p[gi.MKI67]+=0.004;p[gi.TOP2A]+=0.004;}const dn=Math.hypot(s.x-NEC[0],s.y-NEC[1]);if(dn<5){p[gi.VEGFA]+=0.01*Math.exp(-dn/2);p[gi.CA9]+=0.01*Math.exp(-dn/2);}
+let z=0;for(let g=0;g<G;g++)z+=p[g];for(let g=0;g<G;g++)p[g]/=z;L=Math.exp(Math.log(s.tum?4200:3000)+0.3*r());fm=0.03+0.03*rand();if(s.nec){L*=0.2;fm=0.25+0.25*rand();}if(s.fold)L*=3.2;}
+const cnt=new Float32Array(G);for(let g=0;g<G;g++)cnt[g]=isMito[g]?poisson(L*fm/MITO.length):poisson(L*(1-fm)*p[g]);let tot=0,mt=0;for(let g=0;g<G;g++){tot+=cnt[g];if(isMito[g])mt+=cnt[g];}s.cnt=cnt;s.umi=tot;s.mito=100*mt/Math.max(1,tot);});
+
+/* ---------- dessin de la lame ---------- */
+function slide(cv,colorOf,opt={}){const{g,w,h}=setup(cv);const xr=[-0.8,NX+0.3],yr=[-0.8,(NY-1)*0.866+0.8];const s=Math.min(w/(xr[1]-xr[0]),h/(yr[1]-yr[0])),ox=(w-(xr[1]-xr[0])*s)/2,oy=(h-(yr[1]-yr[0])*s)/2;g.fillStyle=css("--slide");g.fillRect(ox,oy,(xr[1]-xr[0])*s,(yr[1]-yr[0])*s);const R=s*0.5;for(let k=0;k<N;k++){const c=colorOf(k);if(!c)continue;const sp=SP[k];g.fillStyle=c;g.beginPath();g.arc(ox+(sp.x-xr[0])*s,oy+(sp.y-yr[0])*s,R*0.92,0,2*Math.PI);g.fill();}if(opt.ring){g.lineWidth=Math.max(1.2,R*0.35);for(let k=0;k<N;k++){const c=opt.ring(k);if(!c)continue;const sp=SP[k];g.strokeStyle=c;g.beginPath();g.arc(ox+(sp.x-xr[0])*s,oy+(sp.y-yr[0])*s,R*0.8,0,2*Math.PI);g.stroke();}}}
+function ramp(v,lo,hi,c0,c1){const u=Math.max(0,Math.min(1,(v-lo)/((hi-lo)||1)));return`rgb(${mix(c0,c1,u)})`;}
+// HE simulée
+function drawHE(){const tum=hex(css("--he-tum")),lym=hex(css("--he-lym")),str=hex(css("--he-str")),epi=hex(css("--he-epi")),nec=hex(css("--he-nec"));slide($("cvHE"),k=>{const s=SP[k];if(!s.tissue)return null;if(s.nec)return`rgb(${nec})`;const f=s.frac;const parts=[[tum,f[0]],[lym,f[1]+f[2]],[str,f[3]+f[4]+f[5]],[epi,f[6]]];let c=[0,0,0];parts.forEach(([col,v])=>{c=c.map((x,j)=>x+col[j]*v);});if(s.fold)c=c.map(x=>x*0.82);return`rgb(${c.map(Math.round)})`;});}
+redraw.push(drawHE);drawHE();
+
+/* ---------- Étape 1 : QC ---------- */
+let qcMode=0;
+function thr(){return{tis:$("qTissue").checked,min:+$("qMin").value,max:+$("qMax").value,mito:+$("qMito").value};}
+function keep(k,t){const s=SP[k];if(t.tis&&!s.tissue)return false;return s.umi>=t.min&&s.umi<=t.max&&s.mito<=t.mito;}
+function drawQC(){const t=thr();$("qMinOut").textContent=t.min;$("qMaxOut").textContent=t.max;$("qMitoOut").textContent=t.mito;const C=CAT();let kept=0,nn=0,nf=0,tn=0,tf=0;for(let k=0;k<N;k++){const ok=keep(k,t);if(ok)kept++;if(SP[k].nec){tn++;if(!ok)nn++;}if(SP[k].fold){tf++;if(!ok)nf++;}}$("qKept").textContent=kept;$("qNec").textContent=nn+" / "+tn;$("qFold").textContent=nf+" / "+tf;
+const lu=SP.map(s=>Math.log10(Math.max(1,s.umi))),lr=range(lu,0),c0=hex(css("--grid")),c1=hex(css("--c4")),c2=hex(css("--c2"));
+slide($("cvQcMap"),k=>{if(qcMode===0)return keep(k,t)?(SP[k].tissue?C[2]:C[6]):"rgba(0,0,0,0)";if(qcMode===1)return ramp(lu[k],lr[0],lr[1],c0,c1);return ramp(SP[k].mito,0,40,c0,c2);},{ring:qcMode===0?(k=>!keep(k,t)&&SP[k].tissue?C[1]:null):null});
+$("qcLeg").innerHTML=qcMode===0?'<span><i style="background:var(--c3)"></i>Conservé</span><span><i style="background:var(--c7)"></i>Hors tissu conservé</span><span><i style="border:2px solid var(--c2)"></i>Tissu retiré</span>':qcMode===1?'<span>log10 UMI : clair = peu, violet = beaucoup</span>':'<span>% mito : clair = 0, orange = 40 % et plus</span>';
+const cv=$("cvQcSc"),{g,w,h}=setup(cv),box={x:52,y:12,w:w-66,h:h-56};const xr=range(lu,0.03),yr=[0,Math.max(...SP.map(s=>s.mito))*1.05];const A=axes(g,box,xr,yr,"UMI par spot (log10)","% mitochondrial",{xfmt:v=>Math.round(10**v).toLocaleString("fr-FR")});SP.forEach((s,k)=>{const col=!s.tissue?C[6]:s.nec?C[1]:s.fold?C[3]:C[2];g.globalAlpha=keep(k,t)?0.55:0.18;g.fillStyle=col;g.beginPath();g.arc(A.X(lu[k]),A.Y(s.mito),s.nec||s.fold?3:2.2,0,2*Math.PI);g.fill();});g.globalAlpha=1;g.strokeStyle=css("--ink");g.setLineDash([5,4]);g.beginPath();if(t.min>0){g.moveTo(A.X(Math.log10(t.min)),box.y);g.lineTo(A.X(Math.log10(t.min)),box.y+box.h);}g.moveTo(A.X(Math.log10(t.max)),box.y);g.lineTo(A.X(Math.log10(t.max)),box.y+box.h);g.moveTo(box.x,A.Y(t.mito));g.lineTo(box.x+box.w,A.Y(t.mito));g.stroke();g.setLineDash([]);}
+["qMin","qMax","qMito"].forEach(id=>$(id).addEventListener("input",drawQC));$("qTissue").addEventListener("change",drawQC);seg([$("mKeep"),$("mUmi"),$("mMito")],i=>{qcMode=i;drawQC();});redraw.push(drawQC);
+
+/* ---------- pipeline ---------- */
+const S={};
+function runQC(){const t=thr();S.idx=[...Array(N).keys()].filter(k=>keep(k,t));S.pos=new Int32Array(N).fill(-1);S.idx.forEach((k,i)=>S.pos[k]=i);S.ln=S.idx.map(k=>{const s=SP[k],o=new Float32Array(G);for(let g=0;g<G;g++)o[g]=Math.log1p(1e4*s.cnt[g]/s.umi);return o;});S.nb=S.idx.map(k=>NB[k].map(n=>S.pos[n]).filter(p=>p>=0));
+// HVG par dispersion
+const n=S.idx.length,mean=new Float64Array(G),vr=new Float64Array(G);for(const o of S.ln)for(let g=0;g<G;g++)mean[g]+=o[g]/n;for(const o of S.ln)for(let g=0;g<G;g++)vr[g]+=(o[g]-mean[g])**2/(n-1);const hv=NONMITO.slice().sort((a,b)=>vr[b]/(mean[b]+0.1)-vr[a]/(mean[a]+0.1)).slice(0,50);const Z=S.ln.map(o=>Float64Array.from(hv,g=>o[g]));for(let j=0;j<hv.length;j++){let m=0;for(const z of Z)m+=z[j]/n;let v=0;for(const z of Z)v+=(z[j]-m)**2;const sd=Math.sqrt(v/(n-1))||1;for(const z of Z)z[j]=(z[j]-m)/sd;}S.pc=pcaG(Z,12).scores;
+// déconvolution NNLS par gradient projeté
+const rr2=gauss(mulberry32(91)),REF=PROF.map(p=>{const q=Float64Array.from(p,v=>v*Math.exp(0.35*rr2()));const z=q.reduce((a,b)=>a+b,0);return q.map(v=>v/z);});const Rm=NONMITO.map(g=>REF.map(p=>p[g]));const RtR=Array.from({length:7},(_,a)=>Array.from({length:7},(_,b)=>Rm.reduce((s,row)=>s+row[a]*row[b],0)));let Lc=0;for(let a=0;a<7;a++)Lc=Math.max(Lc,RtR[a].reduce((x,y)=>x+Math.abs(y),0));const lr=1/Lc;S.dec=S.idx.map(k=>{const s=SP[k];let tot=0;for(const g of NONMITO)tot+=s.cnt[g];const y=NONMITO.map(g=>s.cnt[g]/Math.max(1,tot));const Rty=Array.from({length:7},(_,a)=>Rm.reduce((acc,row,j)=>acc+row[a]*y[j],0));let w=new Float64Array(7).fill(1/7);for(let it=0;it<400;it++){for(let a=0;a<7;a++){let gr=-Rty[a];for(let b=0;b<7;b++)gr+=RtR[a][b]*w[b];w[a]=Math.max(0,w[a]-lr*gr);}}const z=w.reduce((x,y)=>x+y,0)||1;return Array.from(w,v=>v/z);});
+// Moran
+S.moran=NONMITO.map(g=>{const x=S.ln.map(o=>o[g]),m=x.reduce((a,b)=>a+b,0)/n;let num=0,W=0,den=0;for(let i=0;i<n;i++){den+=(x[i]-m)**2;for(const j of S.nb[i]){num+=(x[i]-m)*(x[j]-m);W++;}}return{g,I:den>0?(n/W)*num/den:0};}).sort((a,b)=>b.I-a.I);}
+function runDomains(){const lam=+$("dLam").value,res=+$("dRes").value;$("dLamOut").textContent=lam.toFixed(2).replace(/0$/,"");$("dResOut").textContent=res.toFixed(1);const n=S.idx.length,P=S.pc;const F=P.map((p,i)=>{if(lam===0||!S.nb[i].length)return p;const m=new Float64Array(p.length);for(const j of S.nb[i])for(let c=0;c<p.length;c++)m[c]+=P[j][c]/S.nb[i].length;return p.map((v,c)=>(1-lam)*v+lam*m[c]);});const k=15,K=[];for(let i=0;i<n;i++){const ds=new Float64Array(n);for(let j=0;j<n;j++){if(i===j){ds[j]=Infinity;continue;}let s=0;for(let c=0;c<F[i].length;c++){const d=F[i][c]-F[j][c];s+=d*d;}ds[j]=s;}const idx=new Int32Array(k).fill(-1),dv=new Float64Array(k).fill(Infinity);for(let j=0;j<n;j++){const d=ds[j];if(d<dv[k-1]){let p=k-1;while(p>0&&dv[p-1]>d){dv[p]=dv[p-1];idx[p]=idx[p-1];p--;}dv[p]=d;idx[p]=j;}}K.push(idx);}const mark=new Int32Array(n).fill(-1),A=Array.from({length:n},()=>new Map());for(let i=0;i<n;i++){for(const j of K[i])mark[j]=i;mark[i]=i;for(const j of K[i]){let inter=0;for(const q of K[j])if(mark[q]===i)inter++;const w=inter/(2*k-inter);if(w>=1/15){A[i].set(j,Math.max(A[i].get(j)||0,w));A[j].set(i,Math.max(A[j].get(i)||0,w));}}}let cl=louvain(A,res,mulberry32(4));const sz=new Map();cl.forEach(c=>sz.set(c,(sz.get(c)||0)+1));const ord=new Map([...sz.entries()].sort((a,b)=>b[1]-a[1]).map(([c],i)=>[c,i]));S.dom=cl.map(c=>ord.get(c));$("dN").textContent=sz.size;$("dAri").textContent=ari(S.idx.map(k=>SP[k].reg),S.dom).toFixed(2);drawDomains();}
+function drawDomains(){if(!S.dom)return;const C=CAT();slide($("cvDom"),k=>{const p=S.pos[k];return p<0?null:(S.dom[p]<12?C[S.dom[p]]:css("--muted"));});const nd=Math.max(...S.dom)+1;$("domLeg").innerHTML=Array.from({length:Math.min(nd,12)},(_,c)=>`<span><i style="background:var(--c${c+1})"></i>D${c+1}</span>`).join("");const RC=[null,C[5],C[4],C[3],C[1],C[0],C[6]];slide($("cvTruth"),k=>{const p=S.pos[k];return p<0?null:RC[SP[k].reg]||css("--muted");});$("truthLeg").innerHTML=REG.slice(1).map((nm,i)=>`<span><i style="background:${RC[i+1]}"></i>${nm}</span>`).join("")+'<span>(vérité simulée)</span>';}
+
+/* ---------- Étape 3 ---------- */
+$("cType").innerHTML=TYPES.map((t,i)=>`<option value="${i}"${i===1?" selected":""}>${t}</option>`).join("");
+function drawDec(){if(!S.dec)return;const t=+$("cType").value,C=CAT();const est=S.dec.map(d=>d[t]),tru=S.idx.map(k=>SP[k].frac?SP[k].frac[t]:0);$("cR").textContent=corr(est,tru).toFixed(2);const mx=Math.max(...est)||1,c0=hex(css("--grid")),c1=hex(css("--c"+(t+1)));slide($("cvDecMap"),k=>{const p=S.pos[k];return p<0?null:ramp(est[p],0,mx,c0,c1);});const cv=$("cvDecSc"),{g,w,h}=setup(cv),box={x:52,y:12,w:w-66,h:h-56};const top=Math.max(mx,...tru)*1.05;const A=axes(g,box,[0,top],[0,top],"proportion vraie","proportion estimée");g.strokeStyle=css("--muted");g.setLineDash([4,4]);g.beginPath();g.moveTo(A.X(0),A.Y(0));g.lineTo(A.X(top),A.Y(top));g.stroke();g.setLineDash([]);g.fillStyle=C[t];g.globalAlpha=0.45;est.forEach((v,i)=>{g.beginPath();g.arc(A.X(tru[i]),A.Y(v),2.2,0,2*Math.PI);g.fill();});g.globalAlpha=1;}
+$("cType").addEventListener("change",drawDec);
+
+/* ---------- Étape 4 ---------- */
+let selGene=null;
+function buildMoran(){const top=S.moran.slice(0,12),bot=S.moran.slice(-2);const list=[...top,...bot];if(!selGene||!list.some(x=>x.g===selGene))selGene=top[0].g;$("mList").innerHTML=list.map(x=>`<button type="button" data-g="${x.g}" aria-pressed="${x.g===selGene}">${GENES[x.g]}<span>${x.I.toFixed(2)}</span></button>`).join("");$("mList").querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{selGene=+b.dataset.g;$("mList").querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x===b));drawGene();}));drawGene();}
+function drawGene(){if(!S.ln||selGene===null)return;const v=S.ln.map(o=>o[selGene]),mx=Math.max(...v)||1,c0=hex(css("--grid")),c1=hex(css("--c4"));slide($("cvGene"),k=>{const p=S.pos[k];return p<0?null:ramp(v[p],0,mx,c0,c1);});const I=S.moran.find(x=>x.g===selGene).I;$("geneCap").textContent=`${GENES[selGene]} : expression normalisée (log CP10k), indice de Moran ${I.toFixed(2)}.`;}
+
+/* ---------- Étape 5 ---------- */
+const FGENES=["CD274","CXCL9","CXCL10","IDO1","PDCD1","LAG3","HAVCR2","TOX","MLANA","CD8A","MKI67","CXCL13"];
+$("fGene").innerHTML=FGENES.map(g=>`<option${g==="CD274"?" selected":""}>${g}</option>`).join("");
+function front(){if(!S.dec)return;const wF=+$("fW").value;$("fWOut").textContent=wF;const g0=gi[$("fGene").value],C=CAT();const isT=new Array(N).fill(false);S.idx.forEach((k,i)=>{isT[k]=S.dec[i][0]>0.5;});const D=signedDist(isT);const v=S.ln.map(o=>o[g0]);const zone=S.idx.map((k,i)=>{const d=D[k];if(d<=-wF-0.5)return"core";if(Math.abs(d)<=wF)return SP[k].x<30?"fi":"fe";return"str";});const mean=z=>{let s=0,c=0;zone.forEach((q,i)=>{if(q===z){s+=v[i];c++;}});return c?s/c:0;};$("fCore").textContent=mean("core").toFixed(2);$("fFi").textContent=mean("fi").toFixed(2);$("fFe").textContent=mean("fe").toFixed(2);
+const mx=Math.max(...v)||1,c0=hex(css("--grid")),c1=hex(css("--c4"));slide($("cvFrontMap"),k=>{const p=S.pos[k];return p<0?null:ramp(v[p],0,mx,c0,c1);},{ring:k=>{const p=S.pos[k];if(p<0)return null;return zone[p]==="fi"?C[1]:zone[p]==="fe"?C[0]:null;}});
+// profils
+const bins=[];for(let d=-8;d<=8;d++)bins.push(d);const prof=side=>bins.map(b=>{let s=0,t=0,u=0,c=0;S.idx.forEach((k,i)=>{const d=D[k];if(d===99)return;const db=Math.round(d>0?d-0.5:d+0.5);if(db!==b)return;if((SP[k].x<30)!==(side==="L"))return;s+=v[i];t+=S.dec[i][1];u+=S.dec[i][0];c++;});return c>=3?[s/c,t/c,u/c]:null;});const PL=prof("L"),PR=prof("R");const cv=$("cvProfile"),{g,w,h}=setup(cv),box={x:64,y:12,w:w-110,h:h-56};const gv=[...PL,...PR].filter(Boolean).map(x=>x[0]);const gmax=Math.max(...gv,0.1)*1.1;const A=axes(g,box,[-8,8],[0,gmax],"distance au bord tumoral (spots) : tumeur ← 0 → stroma",GENES[g0]+" (log CP10k)");g.fillStyle=css("--accent-soft");g.globalAlpha=0.6;g.fillRect(A.X(-wF),box.y,A.X(wF)-A.X(-wF),box.h);g.globalAlpha=1;const line=(P,idx,col,scale,dash)=>{g.strokeStyle=col;g.lineWidth=dash?1.6:2.6;g.setLineDash(dash?[5,4]:[]);g.beginPath();let st=false;P.forEach((p,i)=>{if(!p){st=false;return;}const x=A.X(bins[i]),y=A.Y(p[idx]*scale);if(!st){g.moveTo(x,y);st=true;}else g.lineTo(x,y);});g.stroke();g.setLineDash([]);};line(PL,2,css("--he-tum"),gmax,true);line(PL,1,css("--he-lym"),gmax,true);line(PR,0,C[0],1,false);line(PL,0,C[1],1,false);
+g.fillStyle=css("--muted");g.font="12px "+css("--mono");g.textAlign="left";g.textBaseline="middle";const lastL=PL.map((p,i)=>p?i:-1).filter(i=>i>=0);if(lastL.length){const i1=lastL[lastL.length-1];g.fillStyle=css("--he-lym");g.fillText("T",box.x+box.w+6,A.Y(PL[i1][1]*gmax));g.fillStyle=css("--he-tum");const i0=lastL[0];g.fillText("tumeur",A.X(bins[i0])+4,A.Y(PL[i0][2]*gmax)-10);}
+// verdict
+const fi=mean("fi"),fe=mean("fe"),co=mean("core"),nm=$("fGene").value;let txt;if(["CD274","CXCL9","CXCL10","IDO1"].includes(nm))txt=`<b>${nm} au front inflammé : ${fi.toFixed(2)}</b>, contre ${co.toFixed(2)} au cœur de la tumeur et ${fe.toFixed(2)} au front exclu. Les mêmes cellules de mélanome n'expriment ce gène que là où des lymphocytes T les touchent : c'est la signature de l'IFN-γ produit par les T. La tumeur se protège précisément là où elle est attaquée (résistance adaptative), et c'est cette interaction PD-1/PD-L1 que bloquent les anti-PD-1.`;else if(["PDCD1","LAG3","HAVCR2","TOX"].includes(nm))txt=`<b>${nm} au front inflammé : ${fi.toFixed(2)}</b>, contre ${fe.toFixed(2)} au front exclu. Les lymphocytes T au contact de la tumeur expriment des récepteurs inhibiteurs : ils sont épuisés. Côté exclu, les T restent à distance et n'ont pas ce profil.`;else txt=`<b>${nm}</b> : cœur ${co.toFixed(2)}, front inflammé ${fi.toFixed(2)}, front exclu ${fe.toFixed(2)}. Comparez avec CD274 ou PDCD1 : un marqueur de type cellulaire suit simplement la composition, sans pic propre au front.`;$("reveal").innerHTML=txt;}
+$("fGene").addEventListener("change",front);$("fW").addEventListener("input",front);
+
+/* ---------- orchestration ---------- */
+let tD=null;["dLam","dRes"].forEach(id=>$(id).addEventListener("input",()=>{$("dLamOut").textContent=(+$("dLam").value).toFixed(2).replace(/0$/,"");$("dResOut").textContent=(+$("dRes").value).toFixed(1);clearTimeout(tD);tD=setTimeout(runDomains,80);}));
+function all(){$("busy").textContent="Calcul en cours…";setTimeout(()=>{runQC();runDomains();drawDec();buildMoran();front();$("busy").textContent="";},20);}
+$("qApply").addEventListener("click",all);
+redraw.push(drawDomains,drawDec,drawGene,front);
+drawQC();all();
+})();
+</script>
+
+</body></html>

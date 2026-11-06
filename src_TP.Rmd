@@ -1,0 +1,455 @@
+---
+title: "TP : analyse bioinformatique de données RNA-seq"
+subtitle: "M2 GGB · UE Transcriptomique · bulk, single-cell, endotypes — CORRIGÉ"
+author: "Nathan Foulquier"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+    df_print: paged
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
+                      fig.width = 7, fig.height = 5)
+set.seed(2026)
+```
+
+# Mode d'emploi {-}
+
+- Travaillez en binôme. Exécutez les blocs dans l'ordre (`Ctrl + Entrée` ligne à ligne, ou la flèche verte du bloc).
+- Les `___` sont à compléter. Les **Questions** appellent une réponse courte, en français, directement sous la question : c'est ce qui sera évalué.
+- Bloqués ? Chaque partie propose un **point de reprise** : un objet déjà calculé que vous pouvez charger pour continuer.
+- Le TP suit le squelette du cours : **matrice → normalisation → réduction de dimension → clustering → comparaison**.
+
+```{r packages}
+library(DESeq2)
+library(airway)
+library(ggplot2)
+library(pheatmap)
+library(org.Hs.eg.db)
+library(fgsea)
+library(msigdbr)
+library(Seurat)
+library(mclust)   # adjustedRandIndex()
+library(dplyr)
+library(patchwork) # p1 + p2
+theme_set(theme_minimal(base_size = 13))
+```
+
+# Partie 1 · Bulk RNA-seq de bout en bout (70 min)
+
+**Le jeu de données.** Himes et al. (2014) : des cellules musculaires lisses des voies aériennes, issues de **4 donneurs** (lignées), traitées ou non par **dexaméthasone** (un glucocorticoïde) pendant 18 h. 8 échantillons au total. Les comptes ont été produits par alignement et comptage, comme vu en cours.
+
+## La matrice et les métadonnées
+
+```{r bulk-load}
+data("airway")
+se <- airway
+se$dex <- relevel(se$dex, ref = "untrt")   # le témoin est la référence
+
+dim(se)                       #@ ___(se)
+head(assay(se)[, 1:4])
+as.data.frame(colData(se))[, c("cell", "dex")]
+```
+
+**Question 1.1.** Combien de gènes et d'échantillons ? Quelles variables des métadonnées vont nous intéresser, et laquelle risque de jouer le rôle d'un effet de lot ?
+
+<!-- REP -->
+> 63 677 gènes (identifiants Ensembl) × 8 échantillons. Deux variables : `dex` (traité / non traité), la variable d'intérêt, et `cell` (4 donneurs). Chaque donneur a un échantillon traité et un non traité : `cell` est une source de variation non biologique pour notre question, elle joue le rôle d'un lot (plan apparié, donc équilibré).
+<!-- /REP -->
+
+## Filtrage et normalisation
+
+```{r bulk-filter}
+dds <- DESeqDataSet(se, design = ~ cell + dex)
+
+# On retire les gènes quasi absents : au moins 10 reads dans au moins 4 échantillons
+keep <- rowSums(counts(dds) >= 10) >= 4      #@ keep <- rowSums(counts(dds) >= ___) >= ___
+dds <- dds[keep, ]
+nrow(dds)
+
+# Profondeur de séquençage par échantillon
+colSums(counts(dds)) / 1e6
+```
+
+```{r bulk-norm}
+dds <- estimateSizeFactors(dds)
+sizeFactors(dds)
+
+# Transformation stabilisant la variance, pour l'exploration (ACP, heatmaps)
+vsd <- vst(dds, blind = TRUE)                #@ vsd <- ___(dds, blind = TRUE)
+```
+
+**Question 1.2.** Pourquoi la VST pour l'ACP, mais les comptes bruts pour DESeq2 ? Que se passerait-il si on faisait l'ACP sur les comptes bruts ?
+
+<!-- REP -->
+> DESeq2 modélise des comptes (loi binomiale négative) et calcule lui-même les facteurs de normalisation : il lui faut les entiers bruts. Pour l'ACP, la variance des comptes bruts augmente avec la moyenne : les gènes les plus exprimés domineraient les premières composantes simplement parce qu'ils sont très exprimés. La VST (ou un log) rend la variance à peu près indépendante de la moyenne.
+<!-- /REP -->
+
+## ACP : regarder avant de tester
+
+```{r bulk-pca}
+pca_df <- plotPCA(vsd, intgroup = c("dex", "cell"), returnData = TRUE)
+pv <- round(100 * attr(pca_df, "percentVar"))
+
+ggplot(pca_df, aes(PC1, PC2, colour = dex, shape = cell)) +   #@ ggplot(pca_df, aes(PC1, PC2, colour = ___, shape = ___)) +
+  geom_point(size = 4) +
+  labs(x = paste0("PC1 (", pv[1], " %)"), y = paste0("PC2 (", pv[2], " %)"))
+```
+
+**Question 1.3.** Qu'est-ce qui sépare les échantillons sur PC1 ? Sur PC2 ? Relancez l'ACP en ne colorant que par `cell` : que concluez-vous pour le modèle statistique ?
+
+<!-- REP -->
+> PC1 sépare les traités des non traités : l'effet de la dexaméthasone est le premier facteur de variation. PC2 sépare en grande partie les donneurs (`cell`). Il existe donc une variabilité inter-donneurs importante, qu'il faut inclure dans le modèle (`~ cell + dex`) pour que le test sur `dex` se fasse « à donneur égal ».
+<!-- /REP -->
+
+## Distances entre échantillons et clustering hiérarchique
+
+```{r bulk-dist, fig.width = 6, fig.height = 5}
+d <- dist(t(assay(vsd)))                     #@ d <- dist(t(___(vsd)))
+ann <- as.data.frame(colData(vsd)[, c("dex", "cell")])
+pheatmap(as.matrix(d), annotation_col = ann,
+         clustering_distance_rows = d, clustering_distance_cols = d)
+```
+
+```{r bulk-topvar, fig.width = 6, fig.height = 7}
+# Les 50 gènes les plus variables, en z-score par gène
+top <- head(order(rowVars(assay(vsd)), decreasing = TRUE), 50)
+mat <- assay(vsd)[top, ]
+mat <- mat - rowMeans(mat)
+pheatmap(mat, annotation_col = ann, show_rownames = FALSE, scale = "row")
+```
+
+**Question 1.4.** Le dendrogramme retrouve-t-il les mêmes groupes que l'ACP ? Pourquoi travaille-t-on sur les gènes les plus variables plutôt que sur tous les gènes (pensez à la malédiction des dimensions) ?
+
+<!-- REP -->
+> Oui : la première séparation du dendrogramme oppose traités et non traités, puis les échantillons se regroupent par donneur. On restreint aux gènes variables car la grande majorité des gènes ne portent pas de signal pour la question : ils ajoutent du bruit à toutes les distances et finissent par masquer les groupes (intuition 3 du cours).
+<!-- /REP -->
+
+## Expression différentielle : l'effet du modèle
+
+```{r bulk-deseq}
+# Modèle naïf : on ignore le donneur
+dds_naif <- DESeqDataSet(se[keep, ], design = ~ dex)
+dds_naif <- DESeq(dds_naif)
+res_naif <- results(dds_naif, contrast = c("dex", "trt", "untrt"), alpha = 0.05)
+
+# Modèle complet : donneur + traitement
+dds <- DESeq(dds)                            #@ dds <- ___(dds)
+res <- results(dds, contrast = c("dex", "trt", "untrt"), alpha = 0.05)
+
+summary(res)
+c(naif = sum(res_naif$padj < 0.05, na.rm = TRUE),
+  complet = sum(res$padj < 0.05, na.rm = TRUE))    #@ complet = sum(res$___ < 0.05, na.rm = TRUE))
+```
+
+**Question 1.5.** Combien de gènes sont significatifs (padj < 0,05) avec chaque modèle ? Expliquez la différence. Pourquoi lit-on `padj` et non `pvalue` ?
+
+<!-- REP -->
+> Le modèle `~ cell + dex` en trouve nettement plus que le modèle naïf (de l'ordre de quelques milliers contre un peu moins ; les chiffres exacts dépendent des versions). En retirant la variabilité due au donneur, la variance résiduelle diminue et le test devient plus puissant. On lit `padj` (Benjamini-Hochberg) car on fait des dizaines de milliers de tests : à 5 %, la p-value brute laisserait passer des centaines de faux positifs.
+<!-- /REP -->
+
+## Lire les résultats
+
+```{r bulk-annot}
+res_df <- as.data.frame(res)
+res_df$symbol <- mapIds(org.Hs.eg.db, keys = rownames(res_df),
+                        column = "SYMBOL", keytype = "ENSEMBL", multiVals = "first")
+res_df <- res_df[order(res_df$padj), ]
+head(res_df[, c("symbol", "baseMean", "log2FoldChange", "padj")], 15)
+
+# Quelques gènes connus de la réponse aux glucocorticoïdes
+res_df[which(res_df$symbol %in% c("DUSP1", "KLF15", "PER1", "TSC22D3", "FKBP5", "ZBTB16")),
+       c("symbol", "log2FoldChange", "padj")]
+```
+
+```{r bulk-volcano}
+res_df$statut <- "NS"
+res_df$statut[which(res_df$padj < 0.05 & res_df$log2FoldChange >  1)] <- "Sur-exprimé"
+res_df$statut[which(res_df$padj < 0.05 & res_df$log2FoldChange < -1)] <- "Sous-exprimé"
+
+ggplot(res_df, aes(log2FoldChange, -log10(padj), colour = statut)) +
+  geom_point(size = 0.8, alpha = 0.6) +
+  scale_colour_manual(values = c("NS" = "grey70", "Sur-exprimé" = "#D9702A",
+                                 "Sous-exprimé" = "#2E6FA8")) +
+  geom_vline(xintercept = c(-1, 1), linetype = 2) +                       #@ geom_vline(xintercept = c(___, ___), linetype = 2) +
+  geom_hline(yintercept = -log10(0.05), linetype = 2)                      #@ geom_hline(yintercept = -log10(___), linetype = 2)
+```
+
+**Question 1.6.** Les gènes connus (DUSP1, KLF15, PER1, TSC22D3, FKBP5, ZBTB16) sont-ils retrouvés ? Dans quel sens ? Un gène avec padj = 1e-30 et log2FC = 0,2 est-il intéressant ?
+
+<!-- REP -->
+> Oui, ils sont fortement sur-exprimés sous dexaméthasone, ce qui valide l'analyse (contrôle positif biologique). Un gène très significatif mais à log2FC = 0,2 (environ +15 %) est un effet certain mais faible : sa pertinence biologique est à discuter, d'où l'usage combiné d'un seuil de significativité et d'un seuil de taille d'effet.
+<!-- /REP -->
+
+## Enrichissement fonctionnel (GSEA)
+
+```{r bulk-gsea}
+# Gènes classés par la statistique de Wald (signe = sens, valeur = confiance)
+ranks <- res$stat
+names(ranks) <- rownames(res)
+ranks <- sort(ranks[!is.na(ranks)], decreasing = TRUE)
+
+# Hallmarks MSigDB (selon la version de msigdbr : collection = "H" ou category = "H")
+hallmark <- tryCatch(msigdbr(species = "Homo sapiens", collection = "H"),
+                     error = function(e) msigdbr(species = "Homo sapiens", category = "H"))
+pathways <- split(hallmark$ensembl_gene, hallmark$gs_name)
+
+gsea <- fgsea(pathways, stats = ranks, minSize = 15, maxSize = 500)   #@ gsea <- fgsea(___, stats = ___, minSize = 15, maxSize = 500)
+gsea <- gsea[order(gsea$padj), ]
+head(gsea[, c("pathway", "NES", "padj")], 10)
+
+plotEnrichment(pathways[[gsea$pathway[1]]], ranks) + ggtitle(gsea$pathway[1])
+```
+
+**Question 1.7.** Quelles voies ressortent en tête ? Sont-elles cohérentes avec l'effet d'un glucocorticoïde ? Quelle différence de principe avec une ORA ?
+
+<!-- REP -->
+> On attend en tête des voies comme la réponse inflammatoire, la signalisation TNFα via NF-κB (plutôt réprimées), l'adipogenèse ou le métabolisme (plutôt induites). C'est cohérent avec l'effet anti-inflammatoire des glucocorticoïdes. La GSEA utilise le classement de tous les gènes, sans seuil ; l'ORA ne regarde que la liste des gènes significatifs et teste sa sur-représentation par rapport à l'univers des gènes testés.
+<!-- /REP -->
+
+```{r bulk-save, include = FALSE}
+dir.create("checkpoints", showWarnings = FALSE)
+saveRDS(dds, "checkpoints/airway_dds.rds")
+```
+
+> **Point de reprise :** `dds <- readRDS("checkpoints/airway_dds.rds"); res <- results(dds, contrast = c("dex", "trt", "untrt"))`
+
+# Partie 2 · Single-cell RNA-seq (50 min)
+
+**Le jeu de données.** 2 700 cellules mononucléées du sang (PBMC) d'un donneur sain, le jeu de démonstration classique.
+
+## Charger la matrice gènes × cellules
+
+```{r sc-load}
+counts <- Read10X(data.dir = "data/pbmc3k/filtered_gene_bc_matrices/hg19/")
+pbmc <- CreateSeuratObject(counts = counts, project = "pbmc3k",
+                           min.cells = 3, min.features = 200)
+pbmc
+
+# Proportion de zéros dans la matrice
+mean(as.matrix(GetAssayData(pbmc, layer = "counts")) == 0)
+```
+
+**Question 2.1.** Combien de cellules et de gènes ? Quelle proportion de zéros ? Comparez avec la matrice bulk.
+
+<!-- REP -->
+> Environ 2 700 cellules et 13 700 gènes (après min.cells = 3). Plus de 90 % des valeurs sont nulles : la matrice est creuse. En bulk, peu de zéros pour les gènes exprimés, car chaque valeur somme des millions de cellules.
+<!-- /REP -->
+
+## Contrôle qualité des cellules
+
+```{r sc-qc, fig.width = 10, fig.height = 4}
+pbmc[["percent.mt"]] <- PercentageFeatureSet(pbmc, pattern = "^MT-")   #@ pbmc[["percent.mt"]] <- PercentageFeatureSet(pbmc, pattern = "___")
+VlnPlot(pbmc, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
+FeatureScatter(pbmc, feature1 = "nCount_RNA", feature2 = "percent.mt")
+```
+
+```{r sc-filter}
+pbmc <- subset(pbmc, subset = nFeature_RNA > 200 & nFeature_RNA < 2500 & percent.mt < 5)   #@ pbmc <- subset(pbmc, subset = nFeature_RNA > ___ & nFeature_RNA < ___ & percent.mt < ___)
+ncol(pbmc)
+```
+
+**Question 2.2.** Justifiez chacun de vos trois seuils à partir des graphiques. Quel type d'artefact chacun cible-t-il ?
+
+<!-- REP -->
+> Trop peu de gènes (< 200) : gouttelette vide ou cellule mal capturée. Trop de gènes (> 2 500) : doublet probable. % mitochondrial élevé (> 5 % ici, dans le sang) : cellule abîmée dont l'ARN cytoplasmique a fui. Les seuils se lisent sur les distributions (queues de distribution) et dépendent du tissu.
+<!-- /REP -->
+
+## Normalisation, gènes variables, ACP
+
+```{r sc-norm}
+pbmc <- NormalizeData(pbmc)
+pbmc <- FindVariableFeatures(pbmc, selection.method = "vst", nfeatures = 2000)   #@ pbmc <- FindVariableFeatures(pbmc, selection.method = "vst", nfeatures = ___)
+head(VariableFeatures(pbmc), 10)
+pbmc <- ScaleData(pbmc)
+pbmc <- RunPCA(pbmc, features = VariableFeatures(pbmc))
+ElbowPlot(pbmc, ndims = 30)
+```
+
+**Question 2.3.** Combien de composantes principales garderiez-vous ? Reliez les trois étapes (normalisation, gènes variables, ACP) aux intuitions du cours sur la malédiction des dimensions.
+
+<!-- REP -->
+> Le coude se situe vers 8 à 12 PC ; garder 10 est raisonnable (en conditions réelles, on prend souvent un peu plus par prudence). Normaliser corrige la profondeur variable entre cellules. Garder 2 000 gènes variables retire les dimensions de bruit. L'ACP projette sur le sous-espace qui porte le signal, où les distances redeviennent informatives.
+<!-- /REP -->
+
+## Graphe, clustering, UMAP
+
+```{r sc-cluster, fig.width = 7, fig.height = 6}
+pbmc <- FindNeighbors(pbmc, dims = 1:10)                  #@ pbmc <- FindNeighbors(pbmc, dims = 1:___)
+pbmc <- FindClusters(pbmc, resolution = 0.5)
+pbmc <- RunUMAP(pbmc, dims = 1:10)
+DimPlot(pbmc, reduction = "umap", label = TRUE)
+```
+
+**Exercice 2.4.** Relancez `FindClusters` avec `resolution = 0.1` puis `1.5`, et `RunUMAP` avec `n.neighbors = 5` puis `100`. Notez ce qui change.
+
+```{r sc-params, fig.width = 12, fig.height = 5}
+p1 <- DimPlot(FindClusters(pbmc, resolution = 0.1, verbose = FALSE), label = TRUE) + ggtitle("résolution 0,1")
+p2 <- DimPlot(FindClusters(pbmc, resolution = 1.5, verbose = FALSE), label = TRUE) + ggtitle("résolution 1,5")
+p1 + p2
+
+u5   <- RunUMAP(pbmc, dims = 1:10, n.neighbors = 5,   reduction.name = "umap5",   verbose = FALSE)
+u100 <- RunUMAP(pbmc, dims = 1:10, n.neighbors = 100, reduction.name = "umap100", verbose = FALSE)
+DimPlot(u5, reduction = "umap5") + DimPlot(u100, reduction = "umap100")
+```
+
+**Question 2.4.** Qu'est-ce qui change avec la résolution ? Avec `n.neighbors` ? Peut-on conclure que deux clusters « proches sur l'UMAP » sont biologiquement proches ?
+
+<!-- REP -->
+> La résolution change le nombre de clusters (finesse du découpage du graphe), pas la position des cellules. `n.neighbors` change la forme de l'UMAP : petit = structures locales fragmentées, grand = vue plus globale. Les mêmes cellules restent voisines, mais distances et tailles des groupes à l'écran varient : on ne peut rien conclure des distances entre clusters sur une UMAP.
+<!-- /REP -->
+
+## Annotation des clusters
+
+```{r sc-markers, fig.width = 10, fig.height = 5}
+marqueurs <- c("IL7R", "CCR7", "S100A4", "CD8A", "MS4A1", "CD14", "LYZ",
+               "FCGR3A", "MS4A7", "GNLY", "NKG7", "FCER1A", "CST3", "PPBP")
+DotPlot(pbmc, features = marqueurs) + RotatedAxis()
+FeaturePlot(pbmc, features = c("MS4A1", "CD14", "NKG7", "CD8A"))
+```
+
+```{r sc-annot}
+# Table de correspondance gènes marqueurs -> type cellulaire
+#   IL7R, CCR7 : T CD4 naïfs      | IL7R, S100A4 : T CD4 mémoire | CD8A : T CD8
+#   MS4A1 : B                     | CD14, LYZ : monocytes CD14+  | FCGR3A, MS4A7 : monocytes FCGR3A+
+#   GNLY, NKG7 : NK               | FCER1A, CST3 : cellules dendritiques | PPBP : plaquettes
+# Complétez le vecteur dans l'ordre des clusters 0, 1, 2, ... LUS SUR VOTRE DOT PLOT
+# (la numérotation peut changer selon la version : ne recopiez pas l'exemple les yeux fermés)
+nouveaux_noms <- c("T CD4 naïfs", "Monocytes CD14+", "T CD4 mémoire", "B", "T CD8", "Monocytes FCGR3A+", "NK", "Cellules dendritiques", "Plaquettes")   #@ nouveaux_noms <- c(___)
+names(nouveaux_noms) <- levels(pbmc)
+pbmc <- RenameIdents(pbmc, nouveaux_noms)
+DimPlot(pbmc, reduction = "umap", label = TRUE, repel = TRUE) + NoLegend()
+```
+
+**Question 2.5.** Quel cluster a été le plus difficile à annoter, et pourquoi ? Que faudrait-il pour comparer ces PBMC entre patients Sjögren et témoins (pensez à la pseudo-réplication) ?
+
+<!-- REP -->
+> Souvent les T CD4 naïfs / mémoire (marqueurs partagés, différence de degré) ou les petites populations (DC, plaquettes). Pour comparer des conditions, il faut plusieurs individus par groupe : on agrège les comptes par individu × type cellulaire (pseudobulk) et on revient à DESeq2, l'unité statistique étant l'individu et non la cellule.
+<!-- /REP -->
+
+```{r sc-save, include = FALSE}
+saveRDS(pbmc, "checkpoints/pbmc_annote.rds")
+```
+
+> **Point de reprise :** `pbmc <- readRDS("checkpoints/pbmc_annote.rds")`
+
+# Partie 3 · Mini-projet : retrouver des endotypes (30 min)
+
+**Le principe.** On se met dans la situation d'une recherche d'endotypes, mais sur un cas où la réponse est connue : 200 tumeurs du sein (TCGA-BRCA) dont les **sous-types moléculaires PAM50** ont été établis. On fait comme si on ne les connaissait pas, puis on compare.
+
+## Charger et préparer
+
+```{r endo-load}
+brca <- readRDS("data/tcga_brca_subset.rds")   # SummarizedExperiment : comptes + PAM50
+table(brca$pam50)
+
+dds_b <- DESeqDataSetFromMatrix(assay(brca), colData(brca), design = ~ 1)
+vsd_b <- vst(dds_b, blind = TRUE)
+```
+
+## Projection et clustering non supervisé
+
+```{r endo-cluster}
+# 1. Gènes les plus variables
+ntop <- 1000                                                       #@ ntop <- ___
+v <- rowVars(assay(vsd_b))
+X <- t(assay(vsd_b)[order(v, decreasing = TRUE)[1:ntop], ])        # échantillons × gènes
+
+# 2. ACP
+pca <- prcomp(X, center = TRUE, scale. = TRUE)
+pcs <- pca$x[, 1:20]
+summary(pca)$importance[2, 1:5]
+
+# 3. Clustering hiérarchique (Ward) dans l'espace des 20 premières PC
+hc <- hclust(dist(pcs), method = "ward.D2")
+k <- 4                                                             #@ k <- ___
+cl <- cutree(hc, k = k)
+
+# 4. Comparaison aux sous-types connus
+table(cluster = cl, PAM50 = brca$pam50)
+adjustedRandIndex(cl, brca$pam50)                                  #@ adjustedRandIndex(___, brca$pam50)
+```
+
+```{r endo-pca-plot}
+ggplot(data.frame(pcs[, 1:2], cluster = factor(cl), pam50 = brca$pam50),
+       aes(PC1, PC2, colour = pam50, shape = cluster)) +
+  geom_point(size = 2.5)
+```
+
+**Question 3.1.** Vos clusters retrouvent-ils les sous-types PAM50 ? Lesquels sont bien séparés, lesquels sont mélangés ?
+
+<!-- REP -->
+> En général, le sous-type Basal forme un cluster très net, Her2 est assez bien isolé, tandis que Luminal A et Luminal B se mélangent (ils forment plutôt un continuum). L'ARI est donc nettement supérieur à 0 mais loin de 1. C'est typique d'une recherche d'endotypes : certains groupes sont francs, d'autres sont des régions d'un gradient.
+<!-- /REP -->
+
+## Stabilité : vos groupes dépendent-ils de vos choix ?
+
+```{r endo-stability}
+grille <- expand.grid(ntop = c(100, 500, 1000, 5000), k = 2:6)
+grille$ARI <- mapply(function(nt, kk) {
+  Xg <- t(assay(vsd_b)[order(v, decreasing = TRUE)[1:nt], ])
+  pg <- prcomp(Xg, center = TRUE, scale. = TRUE)$x[, 1:20]
+  adjustedRandIndex(cutree(hclust(dist(pg), method = "ward.D2"), k = kk), brca$pam50)
+}, grille$ntop, grille$k)
+
+ggplot(grille, aes(factor(k), ARI, colour = factor(ntop), group = ntop)) +
+  geom_line() + geom_point(size = 3) +
+  labs(x = "nombre de clusters k", colour = "gènes variables")
+```
+
+**Question 3.2.** Quel couple (nombre de gènes, k) donne le meilleur accord ? Dans une vraie étude, on ne connaît pas la « bonne réponse » : comment choisiriez-vous k ?
+
+<!-- REP -->
+> Souvent quelques centaines à 1 000 gènes et k = 4 ou 5 ; trop peu de gènes perd de l'information, trop de gènes ajoute du bruit. Sans vérité terrain, on choisit k par la stabilité (consensus clustering, bootstrap), des indices internes (silhouette), l'interprétabilité biologique de chaque groupe, et surtout la réplication dans une cohorte indépendante.
+<!-- /REP -->
+
+## Le piège de la circularité
+
+```{r endo-circularite}
+set.seed(1)
+bruit <- matrix(rnorm(2000 * 40), nrow = 2000)    # 2 000 « gènes » × 40 « patients », AUCUN signal
+cl_bruit <- kmeans(t(bruit), centers = 2)$cluster  #@ cl_bruit <- kmeans(t(bruit), centers = ___)$cluster
+
+p <- apply(bruit, 1, function(g) t.test(g[cl_bruit == 1], g[cl_bruit == 2])$p.value)
+hist(p, breaks = 40, main = "p-values entre « clusters » de bruit pur", xlab = "p-value")
+c(attendus_par_hasard = 0.05 * 2000, observes = sum(p < 0.05))
+```
+
+**Question 3.3.** Combien de gènes « significatifs » attendrait-on par hasard ? Combien en observez-vous ? Expliquez, et dites comment éviter ce piège dans une étude d'endotypes.
+
+<!-- REP -->
+> Par hasard, environ 100 (5 % de 2 000). On en observe bien plus, car le k-means a justement coupé les patients là où ils diffèrent le plus : tester ensuite les différences entre ces groupes, c'est retrouver ce qui a servi à les créer. Les p-values ne sont plus valides. Il faut caractériser les clusters sur des données indépendantes (cohorte de validation, autre type de données, variables cliniques) plutôt que sur les gènes qui ont servi au clustering.
+<!-- /REP -->
+
+# Bonus · Transcriptomique spatiale (si vous avez le temps)
+
+```{r spatial, eval = FALSE}
+# Coupe de cerveau de souris (démonstration Seurat)
+library(SeuratData)
+brain <- LoadData("stxBrain", type = "anterior1")
+brain <- SCTransform(brain, assay = "Spatial", verbose = FALSE)
+brain <- RunPCA(brain) |> FindNeighbors(dims = 1:30) |> FindClusters() |> RunUMAP(dims = 1:30)
+SpatialDimPlot(brain, label = TRUE)                     # domaines spatiaux
+SpatialFeaturePlot(brain, features = c("Hpca", "Ttr"))  # gènes à variation spatiale
+```
+
+**Question bonus.** Les clusters ainsi obtenus correspondent-ils à des structures anatomiques ? Qu'apporte la position par rapport à l'UMAP seule ?
+
+<!-- REP -->
+> Oui, les clusters dessinent des régions (cortex en couches, hippocampe, plexus choroïde pour Ttr). La position permet de valider les clusters par l'anatomie et de poser des questions de voisinage, inaccessibles en single-cell dissocié.
+<!-- /REP -->
+
+# Bilan {-}
+
+**Question finale.** En trois phrases : quelle étape du squelette d'analyse retrouve-t-on dans les trois parties, et pourquoi est-elle indispensable ?
+
+<!-- REP -->
+> La réduction de dimension (gènes variables puis ACP) est présente partout. Dans l'espace brut à des milliers de gènes, les distances se concentrent et le bruit masque le signal. Projeter sur un petit nombre d'axes rend possibles le clustering, la visualisation et l'interprétation.
+<!-- /REP -->
+
+```{r session}
+sessionInfo()
+```

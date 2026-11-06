@@ -1,0 +1,459 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Cohorte Sjögren multicentrique</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap">
+<style>
+/* Layout : un exercice en cinq étapes qui s'enchaînent — chaque étape alimente la suivante */
+:root {
+  --bg: #F2F4F6; --panel: #FFFFFF; --ink: #142033; --muted: #566274; --line: #D7DDE4;
+  --accent: #C25E1C; --accent-soft: #F6E3D5; --grid: #E6EAEF; --good: #2F7D4F; --warn: #B3541E;
+  --lo: #2E6FA8; --mid: #F4F2EE; --hi: #D9702A;
+  --c1: #2E6FA8; --c2: #D9702A; --c3: #2A9D8F; --c4: #7A5BA6; --c5: #B8901C; --c6: #C8557A;
+  --c7: #5C6B7A; --c8: #5E9E5A; --c9: #9C5B33; --c10: #3FA7D6; --c11: #E07A5F; --c12: #8D6CAB;
+  --display: "Source Serif 4", Georgia, serif;
+  --body: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0F1622; --panel: #172133; --ink: #E8EDF3; --muted: #A3AFBF; --line: #2A3850;
+    --accent: #F0954F; --accent-soft: #3A2A1F; --grid: #223047; --good: #6CC08E; --warn: #F0954F;
+    --lo: #6FA8DA; --mid: #1E2A3E; --hi: #F0954F;
+    --c1: #6FA8DA; --c2: #F0954F; --c3: #4FC1B2; --c4: #A88BD1; --c5: #D8B444; --c6: #E07FA0;
+    --c7: #93A1B1; --c8: #86C281; --c9: #CC8B62; --c10: #6CC4EC; --c11: #F29A82; --c12: #B497D3;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0F1622; --panel: #172133; --ink: #E8EDF3; --muted: #A3AFBF; --line: #2A3850;
+  --accent: #F0954F; --accent-soft: #3A2A1F; --grid: #223047; --good: #6CC08E; --warn: #F0954F;
+  --lo: #6FA8DA; --mid: #1E2A3E; --hi: #F0954F;
+  --c1: #6FA8DA; --c2: #F0954F; --c3: #4FC1B2; --c4: #A88BD1; --c5: #D8B444; --c6: #E07FA0;
+  --c7: #93A1B1; --c8: #86C281; --c9: #CC8B62; --c10: #6CC4EC; --c11: #F29A82; --c12: #B497D3;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 64px;
+}
+.wrap { max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; gap: 40px; }
+header.top { padding-block: 48px 8px; display: flex; flex-direction: column; gap: 14px; }
+.eyebrow { font-family: var(--mono); font-size: 12.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+h1 { font-family: var(--display); font-weight: 600; font-size: clamp(34px, 5vw, 54px); line-height: 1.05; margin: 0; text-wrap: balance; }
+.lede { max-width: 70ch; color: var(--muted); font-size: 17.5px; margin: 0; }
+.scenario { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 28px; align-items: start; }
+.scenario p { margin: 0 0 10px; max-width: 64ch; }
+nav.toc { display: flex; flex-wrap: wrap; gap: 8px; }
+nav.toc a { font-family: var(--mono); font-size: 13px; color: var(--ink); text-decoration: none; border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; background: var(--panel); }
+nav.toc a:hover, nav.toc a:focus-visible { border-color: var(--accent); color: var(--accent); outline: none; }
+section.bench { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 28px; display: flex; flex-direction: column; gap: 20px; scroll-margin-top: 16px; }
+.bench-head { display: flex; flex-direction: column; gap: 6px; }
+.bench-head .num { font-family: var(--mono); font-size: 12.5px; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+h2 { font-family: var(--display); font-weight: 600; font-size: clamp(24px, 3vw, 32px); line-height: 1.15; margin: 0; text-wrap: balance; }
+.bench-head p { margin: 0; max-width: 74ch; color: var(--muted); }
+.bench-body { display: grid; grid-template-columns: 290px minmax(0, 1fr); gap: 28px; align-items: start; }
+.controls { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.ctl { display: flex; flex-direction: column; gap: 6px; }
+.ctl label, .ctl .lab { font-size: 14px; font-weight: 500; display: flex; justify-content: space-between; gap: 8px; }
+.ctl output { font-family: var(--mono); font-size: 13.5px; color: var(--accent); font-variant-numeric: tabular-nums; }
+.hint { font-size: 13px; color: var(--muted); }
+input[type="range"] { width: 100%; accent-color: var(--accent); }
+select { font: 14px var(--body); padding: 7px 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); width: 100%; }
+.seg { display: flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.seg button { flex: 1; font: 500 13.5px var(--body); padding: 7px 6px; border: 0; background: transparent; color: var(--ink); cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); }
+.seg button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
+.stat { border-top: 2px solid var(--line); padding-top: 6px; display: flex; flex-direction: column; gap: 2px; }
+.stat .k { font-size: 12.5px; color: var(--muted); }
+.stat .v { font-family: var(--mono); font-size: 20px; font-variant-numeric: tabular-nums; }
+.stat.hl { border-top-color: var(--accent); }
+.figs { display: grid; gap: 16px; min-width: 0; }
+.figs.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+figure { margin: 0; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+figcaption { font-size: 13.5px; color: var(--muted); }
+canvas { width: 100%; display: block; border-radius: 8px; background: var(--panel); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.look { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; }
+.look > div { border-left: 3px solid var(--accent); padding: 4px 0 4px 14px; font-size: 15px; }
+.look > div.ask { border-left-color: var(--lo); }
+.look b { font-weight: 600; }
+.look p { margin: 0 0 6px; }
+table.ct { border-collapse: collapse; font-family: var(--mono); font-size: 13px; font-variant-numeric: tabular-nums; }
+table.ct th, table.ct td { padding: 4px 10px; border-bottom: 1px solid var(--line); text-align: right; }
+table.ct th:first-child, table.ct td:first-child { text-align: left; }
+table.ct th { font-weight: 500; color: var(--muted); }
+.ctwrap { overflow-x: auto; }
+.reveal { border: 1px solid var(--accent); background: var(--accent-soft); border-radius: 12px; padding: 16px 18px; font-size: 15.5px; }
+.reveal b { color: var(--accent); }
+footer { color: var(--muted); font-size: 13.5px; max-width: 82ch; }
+code { font-family: var(--mono); font-size: .92em; }
+@media (max-width: 860px) {
+  .bench-body, .scenario { grid-template-columns: minmax(0, 1fr); }
+  .figs.two { grid-template-columns: minmax(0, 1fr); }
+  section.bench { padding: 20px; }
+}
+</style>
+
+<div class="wrap">
+<header class="top">
+  <span class="eyebrow">M2 GGB · exercice interactif · effet centre et endotypes</span>
+  <h1>Cohorte Sjögren multicentrique</h1>
+  <div class="scenario">
+    <div>
+      <p class="lede">Un consortium européen (fictif) a recruté des patients atteints de syndrome de Sjögren et des témoins dans six centres. Le transcriptome sanguin de chaque participant a été séquencé sur place. Vous récupérez toutes les données. Votre mission : trouver les gènes qui distinguent patients et témoins, puis des sous-groupes de patients, sans vous faire piéger par les centres.</p>
+      <p class="hint">Données entièrement simulées : 530 participants, 1 200 gènes. Tout est recalculé dans votre navigateur.</p>
+    </div>
+    <div class="ctwrap"><table class="ct" id="designTable" aria-label="Plan de recrutement par centre"></table></div>
+  </div>
+  <nav class="toc" aria-label="Étapes">
+    <a href="#acp">1 · Normaliser et regarder</a>
+    <a href="#espaces">2 · Deux espaces</a>
+    <a href="#deg">3 · Patients vs témoins</a>
+    <a href="#strates">4 · Stratifier</a>
+    <a href="#reponse">5 · Réponse au traitement</a>
+  </nav>
+</header>
+
+<!-- 1 -->
+<section class="bench" id="acp">
+  <div class="bench-head">
+    <span class="num">Étape 1 · Normalisation et ACP</span>
+    <h2>Qu'est-ce qui structure vos données ?</h2>
+    <p>Comparez les données brutes, normalisées, puis corrigées de l'effet centre. Colorez l'ACP par centre ou par statut.</p>
+  </div>
+  <div class="bench-body">
+    <div class="controls">
+      <div class="ctl">
+        <label for="verSel">Données</label>
+        <select id="verSel">
+          <option value="raw">Brutes (comptes en log)</option>
+          <option value="norm" selected>Normalisées (profondeur)</option>
+          <option value="naive">Normalisées + centre retiré (naïf)</option>
+          <option value="prot">Normalisées + centre retiré (statut protégé)</option>
+        </select>
+      </div>
+      <div class="ctl">
+        <span class="lab">Colorer par</span>
+        <div class="seg" role="group" aria-label="Colorer l'ACP par">
+          <button type="button" id="aCen" aria-pressed="true">Centre</button>
+          <button type="button" id="aSta" aria-pressed="false">Statut</button>
+        </div>
+      </div>
+      <div class="row2">
+        <div class="ctl"><label for="pcx">Axe x</label><select id="pcx"><option value="0" selected>PC1</option><option value="1">PC2</option><option value="2">PC3</option><option value="3">PC4</option><option value="4">PC5</option><option value="5">PC6</option></select></div>
+        <div class="ctl"><label for="pcy">Axe y</label><select id="pcy"><option value="0">PC1</option><option value="1" selected>PC2</option><option value="2">PC3</option><option value="3">PC4</option><option value="4">PC5</option><option value="5">PC6</option></select></div>
+      </div>
+    </div>
+    <div class="figs two">
+      <figure>
+        <canvas id="cvPca" height="380" aria-label="ACP des participants"></canvas>
+        <div class="legend" id="pcaLegend"></div>
+      </figure>
+      <figure>
+        <canvas id="cvR2" height="380" aria-label="Part de chaque composante expliquée par le centre et par le statut"></canvas>
+        <figcaption>Pour chaque composante : part de sa variance expliquée par le centre (R²) et par le statut patient / témoin.</figcaption>
+      </figure>
+    </div>
+  </div>
+  <div class="look">
+    <div class="ask"><p><b>À vous :</b> sur les données brutes, qu'est-ce qui porte PC1 ? Et après normalisation ? Sur quelle composante apparaît enfin la maladie ?</p></div>
+    <div><p><b>À observer :</b> la profondeur de séquençage domine les données brutes. Une fois normalisées, les centres occupent encore les premières composantes ; le statut ne commence à apparaître qu'à partir de PC3, et toujours mêlé au centre. Le retrait « naïf » du centre efface aussi une partie de la maladie, car les centres n'ont pas la même proportion de patients.</p></div>
+  </div>
+</section>
+
+<!-- 2 -->
+<section class="bench" id="espaces">
+  <div class="bench-head">
+    <span class="num">Étape 2 · Construire un espace</span>
+    <h2>Les mêmes données, deux espaces de projection</h2>
+    <p>Le même tableau contient deux informations superposées. Une ACP faite sur les gènes qui varient le plus entre centres sépare les hôpitaux ; une ACP faite sur les gènes qui varient le plus entre patients et témoins sépare la maladie.</p>
+  </div>
+  <div class="bench-body">
+    <div class="controls">
+      <div class="ctl">
+        <label for="nSpace">Gènes retenus pour chaque espace <output id="nSpaceOut">100</output></label>
+        <input type="range" id="nSpace" min="20" max="300" step="10" value="100">
+      </div>
+      <div class="stats">
+        <div class="stat"><span class="k">Espace « centre » : R² centre sur PC1</span><span class="v" id="spC">–</span></div>
+        <div class="stat hl"><span class="k">Espace « maladie » : R² statut sur PC1</span><span class="v" id="spS">–</span></div>
+      </div>
+      <span class="hint">Gènes choisis par ANOVA (centre) ou test t (statut) sur les données normalisées.</span>
+    </div>
+    <div class="figs two">
+      <figure>
+        <canvas id="cvSpC" height="320" aria-label="Espace construit sur les gènes liés au centre"></canvas>
+        <div class="legend" id="spLegC"></div>
+      </figure>
+      <figure>
+        <canvas id="cvSpS" height="320" aria-label="Espace construit sur les gènes liés à la maladie"></canvas>
+        <div class="legend"><span><i style="background:var(--c7)"></i>Témoins</span><span><i style="background:var(--c2)"></i>Patients</span></div>
+      </figure>
+    </div>
+  </div>
+  <div class="look">
+    <div class="ask"><p><b>À vous :</b> pourquoi est-il dangereux de choisir les gènes pour la maladie sur ces mêmes données, puis d'affirmer que « l'ACP sépare bien les patients » ?</p></div>
+    <div><p><b>À observer :</b> une projection n'est pas neutre, elle dépend des gènes qu'on lui donne. On peut construire un espace qui raconte l'histoire des centres, ou celle de la maladie. C'est la même logique que la circularité du TP.</p></div>
+  </div>
+</section>
+
+<!-- 3 -->
+<section class="bench" id="deg">
+  <div class="bench-head">
+    <span class="num">Étape 3 · Expression différentielle</span>
+    <h2>Quels gènes distinguent patients et témoins ?</h2>
+    <p>Comme la simulation est connue, on sait quels gènes portent la maladie (modules interféron, lymphoïde B, inflammatoire) et lesquels ne réagissent qu'au centre.</p>
+  </div>
+  <div class="bench-body">
+    <div class="controls">
+      <div class="ctl">
+        <span class="lab">Modèle</span>
+        <div class="seg" role="group" aria-label="Modèle statistique">
+          <button type="button" id="mNa" aria-pressed="false">~ statut</button>
+          <button type="button" id="mCe" aria-pressed="true">~ centre + statut</button>
+        </div>
+      </div>
+      <div class="stats">
+        <div class="stat"><span class="k">Gènes de la maladie détectés</span><span class="v" id="dTrue">–</span></div>
+        <div class="stat hl"><span class="k">Gènes « centre » faussement détectés</span><span class="v" id="dBatch">–</span></div>
+        <div class="stat"><span class="k">Autres faux positifs</span><span class="v" id="dOther">–</span></div>
+      </div>
+      <span class="hint">Seuil : p ajustée (BH) &lt; 0,05.</span>
+    </div>
+    <div class="figs">
+      <figure>
+        <canvas id="cvVol" height="380" aria-label="Volcano plot patients contre témoins"></canvas>
+        <div class="legend"><span><i style="background:var(--c2)"></i>Gène de la maladie</span><span><i style="background:var(--c1)"></i>Gène sensible au centre</span><span><i style="background:var(--c7)"></i>Autre gène</span><span>gros point = significatif</span></div>
+      </figure>
+    </div>
+  </div>
+  <div class="look">
+    <div class="ask"><p><b>À vous :</b> regardez le tableau de recrutement. Pourquoi des gènes qui ne dépendent que du centre ressortent-ils « différentiels » avec le modèle naïf ?</p></div>
+    <div><p><b>À observer :</b> Lisbonne et Milan recrutent surtout des patients, Berlin surtout des témoins. Tout gène sensible au centre devient donc corrélé au statut. Mettre le centre dans le modèle compare patients et témoins à centre égal, et les faux positifs disparaissent.</p></div>
+  </div>
+</section>
+
+<!-- 4 -->
+<section class="bench" id="strates">
+  <div class="bench-head">
+    <span class="num">Étape 4 · Stratification</span>
+    <h2>Des sous-groupes parmi les 330 patients</h2>
+    <p>Clustering hiérarchique (Ward) des patients seuls, sur les gènes choisis. Chaque colonne est un patient, chaque ligne un gène (z-score).</p>
+  </div>
+  <div class="bench-body">
+    <div class="controls">
+      <div class="ctl">
+        <label for="genesSel">Gènes pour la stratification</label>
+        <select id="genesSel">
+          <option value="deg" selected>DEG patients vs témoins (centre corrigé)</option>
+          <option value="var">Gènes les plus variables (non corrigés)</option>
+        </select>
+      </div>
+      <div class="ctl">
+        <label for="nDeg">Nombre de gènes <output id="nDegOut">150</output></label>
+        <input type="range" id="nDeg" min="20" max="250" step="10" value="150">
+      </div>
+      <div class="ctl">
+        <label for="kSl">Nombre d'endotypes k <output id="kOut">4</output></label>
+        <input type="range" id="kSl" min="2" max="8" step="1" value="4">
+      </div>
+      <div class="stats">
+        <div class="stat"><span class="k">ARI avec les centres</span><span class="v" id="sCen">–</span></div>
+        <div class="stat hl"><span class="k">ARI avec les endotypes simulés</span><span class="v" id="sEnd">–</span></div>
+      </div>
+    </div>
+    <div class="figs">
+      <figure>
+        <canvas id="cvHeat" height="440" aria-label="Heatmap patients par gènes, ordonnée par cluster"></canvas>
+        <div class="legend" id="heatLegend"></div>
+      </figure>
+      <div class="ctwrap"><table class="ct" id="modTable" aria-label="Score moyen de chaque module par endotype"></table></div>
+    </div>
+  </div>
+  <div class="look">
+    <div class="ask"><p><b>À vous :</b> nommez chaque endotype d'après le tableau des modules. Lequel ressemble à des témoins ?</p></div>
+    <div><p><b>À observer :</b> sur les gènes les plus variables non corrigés, les « endotypes » sont des centres (ARI élevé avec les centres). Sur les DEG corrigés, on retrouve quatre groupes portés par des modules biologiques, répartis dans tous les centres.</p></div>
+  </div>
+</section>
+
+<!-- 5 -->
+<section class="bench" id="reponse">
+  <div class="bench-head">
+    <span class="num">Étape 5 · Projection et réponse au traitement</span>
+    <h2>Et si on regardait qui a répondu au traitement ?</h2>
+    <p>Une partie des patients a reçu un traitement ciblant la voie interféron (fictif) dans un essai. Projection UMAP des patients dans l'espace des gènes de l'étape 4.</p>
+  </div>
+  <div class="bench-body">
+    <div class="controls">
+      <div class="ctl">
+        <span class="lab">Colorer par</span>
+        <div class="seg" role="group" aria-label="Colorer l'UMAP par">
+          <button type="button" id="uEnd" aria-pressed="true">Endotype</button>
+          <button type="button" id="uCen" aria-pressed="false">Centre</button>
+          <button type="button" id="uRes" aria-pressed="false">Réponse</button>
+        </div>
+      </div>
+      <div class="ctl">
+        <label for="nnU">n_neighbors <output id="nnUOut">15</output></label>
+        <input type="range" id="nnU" min="5" max="60" step="1" value="15">
+      </div>
+      <div class="stats">
+        <div class="stat"><span class="k">Répondeurs, tous patients</span><span class="v" id="rAll">–</span></div>
+        <div class="stat hl"><span class="k">Meilleur endotype</span><span class="v" id="rBest">–</span></div>
+      </div>
+    </div>
+    <div class="figs two">
+      <figure>
+        <canvas id="cvUmap" height="400" aria-label="UMAP des patients"></canvas>
+        <div class="legend" id="umapLegend"></div>
+      </figure>
+      <figure>
+        <canvas id="cvResp" height="400" aria-label="Taux de réponse par endotype"></canvas>
+        <figcaption>Taux de répondeurs par endotype (n au-dessus des barres). Pointillés : taux global.</figcaption>
+      </figure>
+    </div>
+  </div>
+  <div class="reveal" id="revealBox"></div>
+  <div class="look">
+    <div class="ask"><p><b>À vous :</b> l'essai, analysé sur tous les patients, aurait-il conclu à l'efficacité ? Comment concevriez-vous le prochain essai ?</p></div>
+    <div><p><b>À observer :</b> un effet modeste en moyenne cache un effet fort dans un sous-groupe. Revenez à l'étape 4 avec les gènes non corrigés : les « endotypes » ne prédisent plus rien.</p></div>
+  </div>
+</section>
+
+<footer>Données simulées pour l'enseignement. Le consortium, les centres et le traitement sont fictifs ; la structure (modules interféron, lymphoïde B, inflammatoire, groupe proche des témoins) s'inspire des stratifications publiées dans le Sjögren. Méthodes : normalisation par facteur de taille (ici connu exactement, pour isoler l'effet centre), correction de lot par régression avec le statut protégé, tests t sur modèle linéaire avec correction de Benjamini-Hochberg, ACP, Ward, disposition de graphe de type UMAP.</footer>
+</div>
+
+<script>
+(() => {
+"use strict";
+const $=id=>document.getElementById(id);
+/* ---------- aléatoire et stats ---------- */
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function gauss(rand){let s=null;return function(){if(s!==null){const v=s;s=null;return v;}let u=0;while(u===0)u=rand();const v=rand();const r=Math.sqrt(-2*Math.log(u));s=r*Math.sin(2*Math.PI*v);return r*Math.cos(2*Math.PI*v);};}
+function lgamma(x){const c=[76.18009172947146,-86.50532032941677,24.01409824083091,-1.231739572450155,0.1208650973866179e-2,-0.5395239384953e-5];let y=x,t=x+5.5;t-=(x+0.5)*Math.log(t);let s=1.000000000190015;for(let j=0;j<6;j++)s+=c[j]/++y;return -t+Math.log(2.5066282746310005*s/x);}
+function betacf(a,b,x){const M=300,E=3e-12,F=1e-300;let qab=a+b,qap=a+1,qam=a-1,c=1,d=1-qab*x/qap;if(Math.abs(d)<F)d=F;d=1/d;let h=d;for(let m=1;m<=M;m++){const m2=2*m;let aa=m*(b-m)*x/((qam+m2)*(a+m2));d=1+aa*d;if(Math.abs(d)<F)d=F;c=1+aa/c;if(Math.abs(c)<F)c=F;d=1/d;h*=d*c;aa=-(a+m)*(qab+m)*x/((a+m2)*(qap+m2));d=1+aa*d;if(Math.abs(d)<F)d=F;c=1+aa/c;if(Math.abs(c)<F)c=F;d=1/d;const del=d*c;h*=del;if(Math.abs(del-1)<E)break;}return h;}
+function ibeta(x,a,b){if(x<=0)return 0;if(x>=1)return 1;const bt=Math.exp(lgamma(a+b)-lgamma(a)-lgamma(b)+a*Math.log(x)+b*Math.log(1-x));return x<(a+1)/(a+b+2)?bt*betacf(a,b,x)/a:1-bt*betacf(b,a,1-x)/b;}
+function tPval(t,df){if(!isFinite(t))return 0;return ibeta(df/(df+t*t),df/2,0.5);}
+function bh(p){const n=p.length,o=[...p.keys()].sort((i,j)=>p[i]-p[j]),q=new Float64Array(n);let mn=1;for(let r=n-1;r>=0;r--){const i=o[r];mn=Math.min(mn,p[i]*n/(r+1));q[i]=mn;}return q;}
+function ari(a,b){const n=a.length,ka=new Map(),kb=new Map();a.forEach(v=>{if(!ka.has(v))ka.set(v,ka.size);});b.forEach(v=>{if(!kb.has(v))kb.set(v,kb.size);});const T=Array.from({length:ka.size},()=>new Float64Array(kb.size));for(let i=0;i<n;i++)T[ka.get(a[i])][kb.get(b[i])]++;const c2=x=>x*(x-1)/2;let s=0;const ra=new Float64Array(ka.size),rb=new Float64Array(kb.size);T.forEach((r,i)=>r.forEach((v,j)=>{s+=c2(v);ra[i]+=v;rb[j]+=v;}));let sa=0,sb=0;ra.forEach(v=>sa+=c2(v));rb.forEach(v=>sb+=c2(v));const e=sa*sb/c2(n),mx=(sa+sb)/2;return mx===e?0:(s-e)/(mx-e);}
+function r2(v,lab){const n=v.length;let m=0;for(const x of v)m+=x/n;const S=new Map();v.forEach((x,i)=>{const e=S.get(lab[i])||[0,0];e[0]+=x;e[1]++;S.set(lab[i],e);});let b=0,t=0;for(const[,e]of S)b+=e[1]*(e[0]/e[1]-m)**2;for(const x of v)t+=(x-m)**2;return t>0?b/t:0;}
+function pca(rows,m){const n=rows.length,p=rows[0].length;const mean=new Float64Array(p);for(const r of rows)for(let j=0;j<p;j++)mean[j]+=r[j];for(let j=0;j<p;j++)mean[j]/=n;const C=rows.map(r=>{const o=new Float64Array(p);for(let j=0;j<p;j++)o[j]=r[j]-mean[j];return o;});const G=new Float64Array(n*n);for(let i=0;i<n;i++)for(let k=i;k<n;k++){let s=0;const a=C[i],b=C[k];for(let j=0;j<p;j++)s+=a[j]*b[j];G[i*n+k]=s;G[k*n+i]=s;}let tr=0;for(let i=0;i<n;i++)tr+=G[i*n+i];const rand=mulberry32(7),vecs=[],vals=[];for(let c=0;c<m;c++){let v=new Float64Array(n);for(let i=0;i<n;i++)v[i]=rand()-0.5;let lam=0;for(let it=0;it<70;it++){const w=new Float64Array(n);for(let i=0;i<n;i++){let s=0;const off=i*n;for(let k=0;k<n;k++)s+=G[off+k]*v[k];w[i]=s;}for(let q=0;q<vecs.length;q++){let d=0;for(let i=0;i<n;i++)d+=vecs[q][i]*v[i];for(let i=0;i<n;i++)w[i]-=vals[q]*d*vecs[q][i];}let nr=0;for(let i=0;i<n;i++)nr+=w[i]*w[i];nr=Math.sqrt(nr)||1;let dl=0;for(let i=0;i<n;i++){const nv=w[i]/nr;dl+=Math.abs(nv-v[i]);v[i]=nv;}lam=nr;if(dl<1e-5)break;}let big=0;for(let i=1;i<n;i++)if(Math.abs(v[i])>Math.abs(v[big]))big=i;if(v[big]<0)for(let i=0;i<n;i++)v[i]=-v[i];vecs.push(v);vals.push(lam);}return{scores:Array.from({length:n},(_,i)=>vecs.map((v,c)=>v[i]*Math.sqrt(Math.max(vals[c],0)))),varExp:vals.map(l=>tr>0?l/tr:0)};}
+function d2(a,b){let s=0;for(let j=0;j<a.length;j++){const d=a[j]-b[j];s+=d*d;}return s;}
+function ward(P,k){const n=P.length,D=new Float64Array(n*n);for(let i=0;i<n;i++)for(let j=i+1;j<n;j++){const v=d2(P[i],P[j]);D[i*n+j]=v;D[j*n+i]=v;}const size=new Int32Array(n).fill(1),act=new Uint8Array(n).fill(1),lab=Int32Array.from({length:n},(_,i)=>i);let cnt=n;while(cnt>k){let bi=-1,bj=-1,bd=Infinity;for(let i=0;i<n;i++)if(act[i]){const off=i*n;for(let j=i+1;j<n;j++)if(act[j]&&D[off+j]<bd){bd=D[off+j];bi=i;bj=j;}}for(let m=0;m<n;m++)if(act[m]&&m!==bi&&m!==bj){const v=((size[bi]+size[m])*D[bi*n+m]+(size[bj]+size[m])*D[bj*n+m]-size[m]*bd)/(size[bi]+size[bj]+size[m]);D[bi*n+m]=v;D[m*n+bi]=v;}size[bi]+=size[bj];act[bj]=0;for(let i=0;i<n;i++)if(lab[i]===bj)lab[i]=bi;cnt--;}const map=new Map();return Array.from(lab,v=>{if(!map.has(v))map.set(v,map.size);return map.get(v);});}
+
+/* ---------- dessin ---------- */
+function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim();}
+const CAT=()=>Array.from({length:12},(_,i)=>css("--c"+(i+1)));
+function hex(c){const m=c.replace("#","");const v=m.length===3?m.split("").map(x=>x+x).join(""):m;return[parseInt(v.slice(0,2),16),parseInt(v.slice(2,4),16),parseInt(v.slice(4,6),16)];}
+function setup(cv){const dpr=window.devicePixelRatio||1,w=cv.clientWidth,h=parseInt(cv.getAttribute("height"),10);if(cv.width!==Math.round(w*dpr)||cv.height!==Math.round(h*dpr)){cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);cv.style.height=h+"px";}const g=cv.getContext("2d");g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,w,h);return{g,w,h};}
+function niceTicks(a,b,n=5){const span=b-a||1,step0=span/n,mag=Math.pow(10,Math.floor(Math.log10(step0))),st=[1,2,2.5,5,10].map(x=>x*mag).find(x=>span/x<=n)||10*mag;const t=[];for(let v=Math.ceil(a/st)*st;v<=b+1e-9;v+=st)t.push(+v.toFixed(10));return t;}
+function fmt(v){if(v===0)return"0";const a=Math.abs(v);if(a>=10)return v.toFixed(0);if(a>=1)return v.toFixed(1).replace(/\.0$/,"");return v.toFixed(2).replace(/0$/,"");}
+function axes(g,box,xr,yr,xl,yl,opt={}){const{x,y,w,h}=box;g.strokeStyle=css("--grid");g.lineWidth=1;g.fillStyle=css("--muted");g.font="12px "+css("--mono");const X=v=>x+(v-xr[0])/(xr[1]-xr[0])*w,Y=v=>y+h-(v-yr[0])/(yr[1]-yr[0])*h;if(!opt.noXTicks){g.textAlign="center";g.textBaseline="top";for(const t of niceTicks(xr[0],xr[1])){g.beginPath();g.moveTo(X(t),y);g.lineTo(X(t),y+h);g.stroke();g.fillText(fmt(t),X(t),y+h+6);}}if(!opt.noYTicks){g.textAlign="right";g.textBaseline="middle";for(const t of niceTicks(yr[0],yr[1])){g.beginPath();g.moveTo(x,Y(t));g.lineTo(x+w,Y(t));g.stroke();g.fillText(opt.yfmt?opt.yfmt(t):fmt(t),x-6,Y(t));}}g.strokeStyle=css("--line");g.strokeRect(x+.5,y+.5,w-1,h-1);g.fillStyle=css("--ink");g.font="13px "+css("--body");g.textAlign="center";g.textBaseline="bottom";if(xl)g.fillText(xl,x+w/2,y+h+(opt.noXTicks?22:38));if(yl){g.save();g.translate(x-(opt.noYTicks?12:44),y+h/2);g.rotate(-Math.PI/2);g.textBaseline="bottom";g.fillText(yl,0,0);g.restore();}return{X,Y};}
+function range(arr,pad=0.08){let a=Infinity,b=-Infinity;for(const v of arr){if(v<a)a=v;if(v>b)b=v;}const d=(b-a)||1;return[a-d*pad,b+d*pad];}
+const redraw=[];let rz=null;window.addEventListener("resize",()=>{clearTimeout(rz);rz=setTimeout(()=>redraw.forEach(f=>f()),120);});
+const mq=window.matchMedia("(prefers-color-scheme: dark)");mq.addEventListener&&mq.addEventListener("change",()=>redraw.forEach(f=>f()));
+new MutationObserver(()=>redraw.forEach(f=>f())).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+function seg(btns,cb){btns.forEach((b,i)=>b.addEventListener("click",()=>{btns.forEach((x,j)=>x.setAttribute("aria-pressed",i===j));cb(i);}));}
+
+/* ---------- simulation ---------- */
+const CENTRES=[["Brest",80,20],["Grenade",70,50],["Berlin",40,60],["Milan",60,20],["Stockholm",30,40],["Lisbonne",50,10]];
+const NC=CENTRES.length,G=1200,MOD=[[0,80,"Interféron"],[80,140,"Lymphoïde B"],[140,200,"Inflammatoire"]],BATCH=[200,500];
+const LEV=[[2.2,0.3,0],[1.3,1.8,0.2],[0.6,0,2.0],[0.1,0.1,0.1]],PROPS=[.33,.29,.13,.25],RESP=[0.68,0.14,0.10,0.07];
+const DEPTH=[0,0.9,-0.6,0.4,-1.0,0.6];
+const rand=mulberry32(5),r=gauss(rand);
+const cen=[],st=[],endo=[],resp=[];CENTRES.forEach(([,p,t],c)=>{for(let i=0;i<p;i++){cen.push(c);st.push(1);}for(let i=0;i<t;i++){cen.push(c);st.push(0);}});
+const N=cen.length;
+for(let s=0;s<N;s++){if(st[s]){const u=rand();let e=0,acc=0;for(;e<3;e++){acc+=PROPS[e];if(u<acc)break;}endo.push(e);resp.push(rand()<RESP[e]?1:0);}else{endo.push(-1);resp.push(-1);}}
+const mu=Float64Array.from({length:G},()=>7+1.5*r()),sdg=Float64Array.from({length:G},()=>0.35+0.3*rand()),load=Float64Array.from({length:G},()=>0.6+0.7*rand());
+const bc=Array.from({length:NC},()=>Float64Array.from({length:G},(_,g)=>(g>=BATCH[0]&&g<BATCH[1]?1.3*r():0)+0.15*r()));
+const RAW=[],DEP=[];for(let s=0;s<N;s++){const o=new Float64Array(G),dep=DEPTH[cen[s]]+0.3*r();DEP.push(dep);let L=null;if(st[s]){L=LEV[endo[s]].map(v=>v+0.3*r());}for(let g=0;g<G;g++){let v=mu[g]+dep+bc[cen[s]][g]+sdg[g]*r();if(L){for(let m=0;m<3;m++)if(g>=MOD[m][0]&&g<MOD[m][1])v+=L[m]*load[g];}o[g]=v;}RAW.push(o);}
+// normalisation : facteur de taille par échantillon (estimé ici sans erreur, pour isoler l'effet centre)
+const NORM=RAW.map((o,s)=>Float64Array.from(o,v=>v-DEP[s]+0.01*r()));
+// modèles linéaires par gène
+const cenIdx=Array.from({length:NC},(_,c)=>[]);cen.forEach((c,s)=>cenIdx[c].push(s));
+function fitGene(Y,g,withCentre){let xc=new Float64Array(N),yc=new Float64Array(N);if(withCentre){for(const ids of cenIdx){let mx=0,my=0;for(const s of ids){mx+=st[s];my+=Y[s][g];}mx/=ids.length;my/=ids.length;for(const s of ids){xc[s]=st[s]-mx;yc[s]=Y[s][g]-my;}}}else{let mx=0,my=0;for(let s=0;s<N;s++){mx+=st[s]/N;my+=Y[s][g]/N;}for(let s=0;s<N;s++){xc[s]=st[s]-mx;yc[s]=Y[s][g]-my;}}let sxx=0,sxy=0;for(let s=0;s<N;s++){sxx+=xc[s]*xc[s];sxy+=xc[s]*yc[s];}const b=sxy/sxx;let rss=0;for(let s=0;s<N;s++)rss+=(yc[s]-b*xc[s])**2;const df=withCentre?N-NC-1:N-2;const t=b/Math.sqrt(rss/df/sxx);return{b,t,p:tPval(t,df)};}
+const fitN=[],fitC=[];for(let g=0;g<G;g++){fitN.push(fitGene(NORM,g,false));fitC.push(fitGene(NORM,g,true));}
+const qN=bh(fitN.map(f=>f.p)),qC=bh(fitC.map(f=>f.p));
+// corrections de lot
+const PROT=NORM.map(o=>o.slice()),NAIVE=NORM.map(o=>o.slice());
+for(let g=0;g<G;g++){const b=fitC[g].b;let abar=0;const a=new Float64Array(NC),ym=new Float64Array(NC);let gmean=0;cenIdx.forEach((ids,c)=>{let my=0,mx=0;for(const s of ids){my+=NORM[s][g];mx+=st[s];}my/=ids.length;mx/=ids.length;ym[c]=my;a[c]=my-b*mx;});for(let s=0;s<N;s++){abar+=a[cen[s]]/N;gmean+=NORM[s][g]/N;}for(let s=0;s<N;s++){PROT[s][g]=NORM[s][g]-(a[cen[s]]-abar);NAIVE[s][g]=NORM[s][g]-ym[cen[s]]+gmean;}}
+const DATA={raw:RAW,norm:NORM,naive:NAIVE,prot:PROT};
+function topVar(rows,n,idx){const m=new Float64Array(G),v=new Float64Array(G),ids=idx||[...rows.keys()];for(const s of ids)for(let g=0;g<G;g++)m[g]+=rows[s][g]/ids.length;for(const s of ids)for(let g=0;g<G;g++)v[g]+=(rows[s][g]-m[g])**2;return[...Array(G).keys()].sort((a,b)=>v[b]-v[a]).slice(0,n);}
+function zrows(rows,genes,idx){const ids=idx||[...rows.keys()];const out=ids.map(s=>Float64Array.from(genes,g=>rows[s][g]));for(let j=0;j<genes.length;j++){let m=0;for(const o of out)m+=o[j]/out.length;let v=0;for(const o of out)v+=(o[j]-m)**2;const sd=Math.sqrt(v/(out.length-1))||1;for(const o of out)o[j]=(o[j]-m)/sd;}return out;}
+
+/* ---------- tableau de recrutement ---------- */
+(function(){let h="<tr><th>Centre</th><th>Patients</th><th>Témoins</th><th>% patients</th></tr>";CENTRES.forEach(([nm,p,t],c)=>{h+=`<tr><td><i style="display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--c${[1,2,3,4,5,6][c]});margin-right:7px"></i>${nm}</td><td>${p}</td><td>${t}</td><td>${Math.round(100*p/(p+t))} %</td></tr>`;});const P=CENTRES.reduce((a,c)=>a+c[1],0),T=CENTRES.reduce((a,c)=>a+c[2],0);h+=`<tr><td><b>Total</b></td><td><b>${P}</b></td><td><b>${T}</b></td><td>${Math.round(100*P/(P+T))} %</td></tr>`;$("designTable").innerHTML=h;})();
+
+function cenLegend(){return CENTRES.map(([nm],c)=>`<span><i style="background:var(--c${c+1})"></i>${nm}</span>`).join("");}
+
+/* ---------- Étape 1 ---------- */
+(function(){const cache={};let colorBy=0;
+function get(ver){if(!cache[ver]){const genes=topVar(DATA[ver],400);const rows=DATA[ver].map(o=>Float64Array.from(genes,g=>o[g]));cache[ver]=pca(rows,6);}return cache[ver];}
+function draw(){const ver=$("verSel").value,P=get(ver),px=+$("pcx").value,py=+$("pcy").value,C=CAT();const cv=$("cvPca"),{g,w,h}=setup(cv),box={x:52,y:12,w:w-66,h:h-60};const xr=range(P.scores.map(s=>s[px])),yr=range(P.scores.map(s=>s[py]));const{X,Y}=axes(g,box,xr,yr,`PC${px+1} (${(P.varExp[px]*100).toFixed(0)} %)`,`PC${py+1} (${(P.varExp[py]*100).toFixed(0)} %)`,{noXTicks:true,noYTicks:true});g.globalAlpha=0.8;for(let s=0;s<N;s++){g.fillStyle=colorBy===0?C[cen[s]]:(st[s]?C[1]:C[6]);g.beginPath();g.arc(X(P.scores[s][px]),Y(P.scores[s][py]),3.2,0,2*Math.PI);g.fill();}g.globalAlpha=1;$("pcaLegend").innerHTML=colorBy===0?cenLegend():'<span><i style="background:var(--c7)"></i>Témoins</span><span><i style="background:var(--c2)"></i>Patients</span>';
+// R2 par composante
+const cv2=$("cvR2"),o=setup(cv2),b2={x:52,y:30,w:o.w-66,h:o.h-78};const{X:X2,Y:Y2}=axes(o.g,b2,[0,6],[0,1],"",'R²',{noXTicks:true});const bw=b2.w/6;for(let k=0;k<6;k++){const v=P.scores.map(s=>s[k]),rc=r2(v,cen),rs=r2(v,st),x0=b2.x+k*bw;o.g.fillStyle=C[0];o.g.fillRect(x0+bw*0.14,Y2(rc),bw*0.34,Y2(0)-Y2(rc));o.g.fillStyle=C[1];o.g.fillRect(x0+bw*0.52,Y2(rs),bw*0.34,Y2(0)-Y2(rs));o.g.fillStyle=css("--ink");o.g.font="13px "+css("--mono");o.g.textAlign="center";o.g.textBaseline="top";o.g.fillText("PC"+(k+1),x0+bw/2,b2.y+b2.h+8);}o.g.textAlign="left";o.g.textBaseline="middle";o.g.font="13px "+css("--body");o.g.fillStyle=C[0];o.g.fillRect(b2.x,10,10,10);o.g.fillStyle=css("--ink");o.g.fillText("centre",b2.x+16,15);o.g.fillStyle=C[1];o.g.fillRect(b2.x+80,10,10,10);o.g.fillStyle=css("--ink");o.g.fillText("statut",b2.x+96,15);}
+["verSel","pcx","pcy"].forEach(id=>$(id).addEventListener("change",draw));seg([$("aCen"),$("aSta")],i=>{colorBy=i;draw();});redraw.push(draw);draw();})();
+
+/* ---------- Étape 2 ---------- */
+(function(){// F de centre (ANOVA) et t de statut par gène, sur données normalisées
+const Fc=new Float64Array(G);for(let g=0;g<G;g++){const v=NORM.map(o=>o[g]);Fc[g]=r2(v,cen);}const tS=fitN.map(f=>Math.abs(f.t));
+const ordC=[...Array(G).keys()].sort((a,b)=>Fc[b]-Fc[a]),ordS=[...Array(G).keys()].sort((a,b)=>tS[b]-tS[a]);let res=null;
+function compute(){const n=+$("nSpace").value;$("nSpaceOut").textContent=n;const pc=pca(zrows(NORM,ordC.slice(0,n)),2),ps=pca(zrows(NORM,ordS.slice(0,n)),2);res={pc,ps};$("spC").textContent=r2(pc.scores.map(s=>s[0]),cen).toFixed(2);$("spS").textContent=r2(ps.scores.map(s=>s[0]),st).toFixed(2);draw();}
+function plot(id,P,col){const cv=$(id),{g,w,h}=setup(cv),box={x:40,y:12,w:w-54,h:h-56};const xr=range(P.scores.map(s=>s[0])),yr=range(P.scores.map(s=>s[1]));const{X,Y}=axes(g,box,xr,yr,`PC1 (${(P.varExp[0]*100).toFixed(0)} %)`,`PC2 (${(P.varExp[1]*100).toFixed(0)} %)`,{noXTicks:true,noYTicks:true});g.globalAlpha=0.8;for(let s=0;s<N;s++){g.fillStyle=col(s);g.beginPath();g.arc(X(P.scores[s][0]),Y(P.scores[s][1]),3,0,2*Math.PI);g.fill();}g.globalAlpha=1;}
+function draw(){if(!res)return;const C=CAT();plot("cvSpC",res.pc,s=>C[cen[s]]);plot("cvSpS",res.ps,s=>st[s]?C[1]:C[6]);$("spLegC").innerHTML=cenLegend();}
+$("nSpace").addEventListener("input",compute);redraw.push(draw);compute();})();
+
+/* ---------- Étape 3 ---------- */
+(function(){let model=1;
+function cat(g){return g<200?0:(g>=BATCH[0]&&g<BATCH[1]?1:2);}
+function draw(){const F=model?fitC:fitN,q=model?qC:qN,C=CAT();let nt=0,nb=0,no=0;for(let g=0;g<G;g++)if(q[g]<0.05){const c=cat(g);if(c===0)nt++;else if(c===1)nb++;else no++;}$("dTrue").textContent=nt+" / 200";$("dBatch").textContent=nb;$("dOther").textContent=no;const cv=$("cvVol"),{g,w,h}=setup(cv),box={x:56,y:12,w:w-70,h:h-60};const yv=i=>Math.min(60,-Math.log10(Math.max(q[i],1e-300)));const ymax=Math.max(...Array.from({length:G},(_,i)=>yv(i)))*1.06;const{X,Y}=axes(g,box,[-1.2,2.8],[0,ymax],"log2 fold change (patients / témoins)","−log10(p ajustée)");const order=[...Array(G).keys()].sort((a,b)=>cat(b)-cat(a));for(const i of order){const c=cat(i),sig=q[i]<0.05;g.globalAlpha=sig?0.9:0.35;g.fillStyle=c===0?C[1]:c===1?C[0]:C[6];g.beginPath();g.arc(X(Math.max(-1.15,Math.min(2.75,F[i].b))),Y(yv(i)),sig?3.6:2,0,2*Math.PI);g.fill();}g.globalAlpha=1;g.strokeStyle=css("--ink");g.setLineDash([5,4]);g.beginPath();g.moveTo(box.x,Y(-Math.log10(0.05)));g.lineTo(box.x+box.w,Y(-Math.log10(0.05)));g.stroke();g.setLineDash([]);}
+seg([$("mNa"),$("mCe")],i=>{model=i;draw();});redraw.push(draw);draw();})();
+
+/* ---------- Étapes 4 et 5 ---------- */
+const PAT=[...Array(N).keys()].filter(s=>st[s]);const NP=PAT.length;
+const degOrder=[...Array(G).keys()].filter(g=>qC[g]<0.05&&fitC[g].b>0).sort((a,b)=>fitC[b].b-fitC[a].b);
+let strat=null;
+function stratify(){const mode=$("genesSel").value,n=+$("nDeg").value,k=+$("kSl").value;$("nDegOut").textContent=n;$("kOut").textContent=k;let genes,rows;if(mode==="deg"){genes=degOrder.slice(0,Math.min(n,degOrder.length));rows=PROT;}else{genes=topVar(NORM,n,PAT);rows=NORM;}const Z=zrows(rows,genes,PAT);const P=pca(Z,10);let cl=ward(P.scores,k);
+// ordonner les clusters par score interféron décroissant
+const ifn=new Float64Array(k),cnt=new Float64Array(k);cl.forEach((c,i)=>{let s=0;for(let g=MOD[0][0];g<MOD[0][1];g++)s+=PROT[PAT[i]][g];ifn[c]+=s;cnt[c]++;});const ord=[...Array(k).keys()].sort((a,b)=>ifn[b]/cnt[b]-ifn[a]/cnt[a]);const re=new Map(ord.map((c,i)=>[c,i]));cl=cl.map(c=>re.get(c));
+// ordre des gènes : Ward sur les profils
+const GZ=genes.map((_,j)=>Float64Array.from(Z,z=>z[j]));const gcl=genes.length>2?ward(GZ,Math.min(6,genes.length)):genes.map(()=>0);const gmeanCl=new Map();gcl.forEach((c,j)=>{const m=GZ[j].reduce((a,b)=>a+b,0);gmeanCl.set(c,(gmeanCl.get(c)||0)+m);});const gOrd=[...genes.keys()].sort((a,b)=>gcl[a]-gcl[b]||a-b);
+const colOrd=[...Array(NP).keys()].sort((a,b)=>cl[a]-cl[b]||P.scores[a][0]-P.scores[b][0]);
+strat={genes,Z,P,cl,k,colOrd,gOrd};$("sCen").textContent=ari(PAT.map(s=>cen[s]),cl).toFixed(2);$("sEnd").textContent=ari(PAT.map(s=>endo[s]),cl).toFixed(2);modTable();drawHeat();umap.run();}
+function modTable(){const{cl,k}=strat;const zs=MOD.map(([a,b])=>{const vals=PAT.map(s=>{let v=0;for(let g=a;g<b;g++)v+=PROT[s][g];return v/(b-a);});const m=vals.reduce((x,y)=>x+y,0)/NP;const sd=Math.sqrt(vals.reduce((x,y)=>x+(y-m)**2,0)/NP)||1;return vals.map(v=>(v-m)/sd);});let h="<tr><th>Endotype</th><th>n</th>"+MOD.map(m=>`<th>${m[2]}</th>`).join("")+"</tr>";const lo=hex(css("--lo")),mid=hex(css("--mid")),hi=hex(css("--hi"));for(let c=0;c<k;c++){const ids=[];cl.forEach((v,i)=>{if(v===c)ids.push(i);});h+=`<tr><td><i style="display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--c${c+1});margin-right:7px"></i>E${c+1}</td><td>${ids.length}</td>`;zs.forEach(z=>{const m=ids.reduce((a,i)=>a+z[i],0)/(ids.length||1);const t=Math.max(-1,Math.min(1,m/1.2)),A=t<0?lo:hi,u=Math.abs(t),rgb=mid.map((v,j)=>Math.round(v+(A[j]-v)*u));const ink=u>0.55?css("--panel"):css("--ink");h+=`<td style="background:rgb(${rgb});color:${ink}">${m>=0?"+":""}${m.toFixed(2)}</td>`;});h+="</tr>";}$("modTable").innerHTML=h;}
+function drawHeat(){if(!strat)return;const{Z,cl,colOrd,gOrd,genes}=strat,C=CAT();const cv=$("cvHeat"),{g,w,h}=setup(cv);const L=86,top=40,bw=w-L-8,bh=h-top-8,cw=bw/NP,rh=bh/genes.length;const lo=hex(css("--lo")),mid=hex(css("--mid")),hi=hex(css("--hi"));const img=g.createImageData(Math.max(1,Math.round(bw)),Math.max(1,Math.round(bh)));const W=img.width,H=img.height;for(let py=0;py<H;py++){const gi=gOrd[Math.min(genes.length-1,Math.floor(py/H*genes.length))];for(let px=0;px<W;px++){const pi=colOrd[Math.min(NP-1,Math.floor(px/W*NP))];const z=Math.max(-2,Math.min(2,Z[pi][gi]))/2,A=z<0?lo:hi,u=Math.abs(z),o=(py*W+px)*4;img.data[o]=mid[0]+(A[0]-mid[0])*u;img.data[o+1]=mid[1]+(A[1]-mid[1])*u;img.data[o+2]=mid[2]+(A[2]-mid[2])*u;img.data[o+3]=255;}}const dpr=window.devicePixelRatio||1;const tmp=document.createElement("canvas");tmp.width=W;tmp.height=H;tmp.getContext("2d").putImageData(img,0,0);g.imageSmoothingEnabled=false;g.drawImage(tmp,L,top,bw,bh);
+// bandes d'annotation : endotype, centre
+colOrd.forEach((pi,x)=>{g.fillStyle=C[cl[pi]%12];g.fillRect(L+x*cw,4,Math.ceil(cw),14);g.fillStyle=C[cen[PAT[pi]]];g.fillRect(L+x*cw,21,Math.ceil(cw),14);});g.fillStyle=css("--ink");g.font="12px "+css("--body");g.textAlign="right";g.textBaseline="middle";g.fillText("endotype",L-6,11);g.fillText("centre",L-6,28);
+// étiquettes des modules de gènes
+const labOf=gi=>{const gg=genes[gi];for(const[a,b,nm]of MOD)if(gg>=a&&gg<b)return nm;return gg>=BATCH[0]&&gg<BATCH[1]?"centre":"autre";};let start=0;for(let y=1;y<=gOrd.length;y++){const cur=y<gOrd.length?labOf(gOrd[y]):null;if(cur!==labOf(gOrd[start])){if(y-start>=Math.max(4,genes.length*0.06)){g.fillStyle=css("--muted");g.fillText(labOf(gOrd[start]),L-6,top+((start+y)/2)*rh);}start=y;}}
+// séparateurs de clusters
+g.strokeStyle=css("--panel");g.lineWidth=2;let prev=cl[colOrd[0]];colOrd.forEach((pi,x)=>{if(cl[pi]!==prev){g.beginPath();g.moveTo(L+x*cw,4);g.lineTo(L+x*cw,top+bh);g.stroke();prev=cl[pi];}});
+$("heatLegend").innerHTML=Array.from({length:strat.k},(_,c)=>`<span><i style="background:var(--c${c+1})"></i>E${c+1}</span>`).join("")+'<span>· bande du bas : centre</span><span><i style="background:var(--lo);border-radius:2px"></i>bas</span><span><i style="background:var(--hi);border-radius:2px"></i>haut (z-score)</span>';}
+["genesSel"].forEach(id=>$(id).addEventListener("change",stratify));let sT=null;["nDeg","kSl"].forEach(id=>$(id).addEventListener("input",()=>{$("nDegOut").textContent=$("nDeg").value;$("kOut").textContent=$("kSl").value;clearTimeout(sT);sT=setTimeout(stratify,60);}));redraw.push(()=>{modTable();drawHeat();});
+
+/* ---------- Étape 5 : UMAP et réponse ---------- */
+const umap=(function(){let Y=null,colorBy=0,anim=null;
+function run(){if(!strat)return;const X=strat.P.scores,n=X.length,nn=+$("nnU").value;$("nnUOut").textContent=nn;const ord=[];for(let i=0;i<n;i++){const ds=new Float64Array(n);for(let j=0;j<n;j++)ds[j]=i===j?Infinity:d2(X[i],X[j]);ord.push([...Array(n).keys()].sort((a,b)=>ds[a]-ds[b]).slice(0,nn));}
+const W=new Map();for(let i=0;i<n;i++){const ds=ord[i].map(j=>Math.sqrt(d2(X[i],X[j])));const rho=ds[0],tgt=Math.log2(nn);let lo=1e-6,hi=1e3,sg=1;for(let it=0;it<60;it++){sg=(lo+hi)/2;let f=0;for(const d of ds)f+=Math.exp(-Math.max(0,d-rho)/sg);if(f>tgt)hi=sg;else lo=sg;}ord[i].forEach((j,q)=>{const w=Math.exp(-Math.max(0,ds[q]-rho)/sg),key=i<j?i*n+j:j*n+i,o=W.get(key);W.set(key,o===undefined?w:o+w-o*w);});}const E=[];for(const[key,w]of W)E.push([Math.floor(key/n),key%n,w]);
+const rx=range(X.map(p=>p[0]),0),ry=range(X.map(p=>p[1]),0);Y=X.map(p=>[(p[0]-(rx[0]+rx[1])/2)/((rx[1]-rx[0])/2)*3,(p[1]-(ry[0]+ry[1])/2)/((ry[1]-ry[0])/2)*3]);const a=1.58,b=0.9,EP=300,rnd=mulberry32(9);let ep=0;if(anim)cancelAnimationFrame(anim);const reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const step=()=>{const until=reduce?EP:Math.min(EP,ep+15);for(;ep<until;ep++){const al=1-ep/EP;for(const[i,j,wt]of E){if(rnd()>wt)continue;const yi=Y[i],yj=Y[j];let dx=yi[0]-yj[0],dy=yi[1]-yj[1],dd=dx*dx+dy*dy;if(dd>0){const gc=-2*a*b*Math.pow(dd,b-1)/(1+a*Math.pow(dd,b));const gx=Math.max(-4,Math.min(4,gc*dx))*al,gy=Math.max(-4,Math.min(4,gc*dy))*al;yi[0]+=gx;yi[1]+=gy;yj[0]-=gx;yj[1]-=gy;}for(let s=0;s<5;s++){const q=Math.floor(rnd()*n);if(q===i)continue;const yq=Y[q];dx=yi[0]-yq[0];dy=yi[1]-yq[1];dd=dx*dx+dy*dy;const gc=2*b/((0.001+dd)*(1+a*Math.pow(dd,b)));yi[0]+=Math.max(-4,Math.min(4,gc*dx))*al;yi[1]+=Math.max(-4,Math.min(4,gc*dy))*al;}}}draw();if(ep<EP)anim=requestAnimationFrame(step);else anim=null;};step();respChart();}
+function draw(){if(!Y)return;const C=CAT(),cv=$("cvUmap"),{g,w,h}=setup(cv),box={x:10,y:10,w:w-20,h:h-20};const xr=range(Y.map(p=>p[0]),0.04),yr=range(Y.map(p=>p[1]),0.04);const s=Math.min(box.w/(xr[1]-xr[0]),box.h/(yr[1]-yr[0])),ox=box.x+(box.w-(xr[1]-xr[0])*s)/2,oy=box.y+(box.h-(yr[1]-yr[0])*s)/2;g.strokeStyle=css("--line");g.strokeRect(.5,.5,w-1,h-1);const order=[...Y.keys()];if(colorBy===2)order.sort((a,b)=>resp[PAT[a]]-resp[PAT[b]]);for(const i of order){const pt=PAT[i];let col;if(colorBy===0)col=C[strat.cl[i]%12];else if(colorBy===1)col=C[cen[pt]];else col=resp[pt]?css("--good"):css("--line");g.fillStyle=col;g.beginPath();g.arc(ox+(Y[i][0]-xr[0])*s,oy+(Y[i][1]-yr[0])*s,colorBy===2&&resp[pt]?4.6:3.6,0,2*Math.PI);g.fill();if(colorBy===2&&!resp[pt]){g.strokeStyle=css("--muted");g.lineWidth=0.8;g.stroke();}}
+$("umapLegend").innerHTML=colorBy===0?Array.from({length:strat.k},(_,c)=>`<span><i style="background:var(--c${c+1})"></i>E${c+1}</span>`).join(""):colorBy===1?cenLegend():'<span><i style="background:var(--good)"></i>Répondeur</span><span><i style="background:var(--line);border:1px solid var(--muted)"></i>Non-répondeur</span>';}
+function respChart(){if(!strat)return;const{cl,k}=strat,C=CAT();const n=new Float64Array(k),rr=new Float64Array(k);cl.forEach((c,i)=>{n[c]++;rr[c]+=resp[PAT[i]];});const tot=PAT.reduce((a,s)=>a+resp[s],0)/NP;$("rAll").textContent=Math.round(tot*100)+" %";let best=0;for(let c=1;c<k;c++)if(rr[c]/n[c]>rr[best]/n[best])best=c;$("rBest").textContent=`E${best+1} : ${Math.round(100*rr[best]/n[best])} %`;
+const cv=$("cvResp"),{g,w,h}=setup(cv),box={x:52,y:14,w:w-66,h:h-62};const{Y:YY}=axes(g,box,[0,1],[0,1],"","% de répondeurs",{noXTicks:true,yfmt:t=>Math.round(t*100)+" %"});const bw=box.w/k;for(let c=0;c<k;c++){const v=rr[c]/n[c],x0=box.x+c*bw+bw*0.18;g.fillStyle=C[c%12];g.fillRect(x0,YY(v),bw*0.64,YY(0)-YY(v));g.fillStyle=css("--ink");g.font="600 13px "+css("--mono");g.textAlign="center";g.textBaseline="bottom";g.fillText(Math.round(v*100)+" %",x0+bw*0.32,YY(v)-16);g.font="12px "+css("--mono");g.fillStyle=css("--muted");g.fillText("n="+n[c],x0+bw*0.32,YY(v)-2);g.fillStyle=css("--ink");g.font="13px "+css("--body");g.textBaseline="top";g.fillText("E"+(c+1),x0+bw*0.32,box.y+box.h+8);}g.strokeStyle=css("--ink");g.setLineDash([5,4]);g.beginPath();g.moveTo(box.x,YY(tot));g.lineTo(box.x+box.w,YY(tot));g.stroke();g.setLineDash([]);
+const others=[...Array(k).keys()].filter(c=>c!==best),ro=others.reduce((a,c)=>a+rr[c],0)/Math.max(1,others.reduce((a,c)=>a+n[c],0));const mode=$("genesSel").value;$("revealBox").innerHTML=mode==="deg"&&rr[best]/n[best]>0.45?`<b>Bim.</b> Sur l'ensemble des patients, le traitement ne fait répondre que ${Math.round(tot*100)} % d'entre eux : l'essai aurait probablement conclu à un échec. Mais l'endotype E${best+1} répond à ${Math.round(100*rr[best]/n[best])} %, contre ${Math.round(ro*100)} % pour les autres. C'est l'endotype où le module interféron est le plus fort, celui que le traitement cible.`:`Ici, aucun groupe ne se distingue vraiment : meilleur taux ${Math.round(100*rr[best]/n[best])} % (E${best+1}) contre ${Math.round(tot*100)} % en moyenne. Des groupes construits sur l'effet centre ne prédisent pas la réponse.`;}
+let uT=null;$("nnU").addEventListener("input",()=>{$("nnUOut").textContent=$("nnU").value;clearTimeout(uT);uT=setTimeout(run,80);});seg([$("uEnd"),$("uCen"),$("uRes")],i=>{colorBy=i;draw();});redraw.push(()=>{draw();respChart();});
+return{run};})();
+stratify();
+})();
+</script>
+
+</body></html>

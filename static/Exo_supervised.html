@@ -1,0 +1,368 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Boruta et projections supervisées</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap">
+<style>
+/* Layout : deux actes — sélectionner des variables (Boruta), puis se méfier des espaces supervisés (LDA, UMAP supervisée) */
+:root {
+  --bg: #F2F4F6; --panel: #FFFFFF; --ink: #142033; --muted: #566274; --line: #D7DDE4;
+  --accent: #C25E1C; --accent-soft: #F6E3D5; --grid: #E6EAEF;
+  --conf: #2F7D4F; --tent: #B8901C; --rej: #B23A48; --shadow: #2E6FA8; --g0: #2E6FA8; --g1: #D9702A; --g2: #2A9D8F; --test: #8A94A3;
+  --display: "Source Serif 4", Georgia, serif;
+  --body: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0F1622; --panel: #172133; --ink: #E8EDF3; --muted: #A3AFBF; --line: #2A3850;
+    --accent: #F0954F; --accent-soft: #3A2A1F; --grid: #223047;
+    --conf: #6CC08E; --tent: #D8B444; --rej: #E8707E; --shadow: #6FA8DA; --g0: #6FA8DA; --g1: #F0954F; --g2: #4FC1B2; --test: #7D8899;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0F1622; --panel: #172133; --ink: #E8EDF3; --muted: #A3AFBF; --line: #2A3850;
+  --accent: #F0954F; --accent-soft: #3A2A1F; --grid: #223047;
+  --conf: #6CC08E; --tent: #D8B444; --rej: #E8707E; --shadow: #6FA8DA; --g0: #6FA8DA; --g1: #F0954F; --g2: #4FC1B2; --test: #7D8899;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 64px;
+}
+.wrap { max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; gap: 40px; }
+header.top { padding-block: 48px 8px; display: flex; flex-direction: column; gap: 14px; }
+.eyebrow { font-family: var(--mono); font-size: 12.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+h1 { font-family: var(--display); font-weight: 600; font-size: clamp(34px, 5vw, 54px); line-height: 1.05; margin: 0; text-wrap: balance; }
+.lede { max-width: 72ch; color: var(--muted); font-size: 17.5px; margin: 0; }
+nav.toc { display: flex; flex-wrap: wrap; gap: 8px; }
+nav.toc a { font-family: var(--mono); font-size: 13px; color: var(--ink); text-decoration: none; border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; background: var(--panel); }
+nav.toc a:hover, nav.toc a:focus-visible { border-color: var(--accent); color: var(--accent); outline: none; }
+.act { font-family: var(--display); font-size: 22px; font-weight: 600; color: var(--muted); border-bottom: 1px solid var(--line); padding-bottom: 6px; margin-top: 8px; }
+section.bench { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 28px; display: flex; flex-direction: column; gap: 20px; scroll-margin-top: 16px; }
+.bench-head { display: flex; flex-direction: column; gap: 6px; }
+.bench-head .num { font-family: var(--mono); font-size: 12.5px; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+h2 { font-family: var(--display); font-weight: 600; font-size: clamp(24px, 3vw, 32px); line-height: 1.15; margin: 0; text-wrap: balance; }
+.bench-head p { margin: 0; max-width: 76ch; color: var(--muted); }
+.bench-body { display: grid; grid-template-columns: 290px minmax(0, 1fr); gap: 28px; align-items: start; }
+.controls { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.ctl { display: flex; flex-direction: column; gap: 6px; }
+.ctl label, .ctl .lab { font-size: 14px; font-weight: 500; display: flex; justify-content: space-between; gap: 8px; }
+.ctl output { font-family: var(--mono); font-size: 13.5px; color: var(--accent); font-variant-numeric: tabular-nums; }
+.hint { font-size: 13px; color: var(--muted); }
+input[type="range"] { width: 100%; accent-color: var(--accent); }
+.check { display: flex; gap: 8px; align-items: center; font-size: 14px; }
+.check input { accent-color: var(--accent); width: 16px; height: 16px; }
+.seg { display: flex; flex-wrap: wrap; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.seg button { flex: 1 1 auto; font: 500 13px var(--body); padding: 7px 6px; border: 0; background: transparent; color: var(--ink); cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); }
+.seg button:focus-visible, .btn:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.btn { font: 500 14px var(--body); padding: 8px 14px; border-radius: 8px; border: 1px solid var(--accent); background: transparent; color: var(--accent); cursor: pointer; align-self: flex-start; }
+.btn.primary { background: var(--accent); color: var(--panel); }
+.btn:hover { filter: brightness(1.06); }
+.row { display: flex; gap: 10px; flex-wrap: wrap; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
+.stat { border-top: 2px solid var(--line); padding-top: 6px; display: flex; flex-direction: column; gap: 2px; }
+.stat .k { font-size: 12.5px; color: var(--muted); }
+.stat .v { font-family: var(--mono); font-size: 20px; font-variant-numeric: tabular-nums; }
+.stat.hl { border-top-color: var(--accent); }
+.figs { display: grid; gap: 16px; min-width: 0; }
+.figs.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+figure { margin: 0; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+figcaption { font-size: 13.5px; color: var(--muted); }
+canvas { width: 100%; display: block; border-radius: 8px; background: var(--panel); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.steps div { border-top: 3px solid var(--line); padding-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+.steps b { font-family: var(--mono); font-size: 12.5px; color: var(--accent); font-weight: 500; }
+.steps h3 { margin: 0; font-size: 17px; font-weight: 600; }
+.steps p { margin: 0; font-size: 14.5px; color: var(--muted); }
+.look { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; }
+.look > div { border-left: 3px solid var(--accent); padding: 4px 0 4px 14px; font-size: 15px; }
+.look > div.ask { border-left-color: var(--shadow); }
+.look b { font-weight: 600; }
+.look p { margin: 0 0 6px; }
+.rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+.rules div { border-top: 3px solid var(--accent); padding-top: 10px; }
+.rules h3 { margin: 0 0 6px; font-size: 17px; }
+.rules p { margin: 0; color: var(--muted); font-size: 15px; }
+.busy { font-family: var(--mono); font-size: 12.5px; color: var(--accent); min-height: 1.4em; }
+footer { color: var(--muted); font-size: 13.5px; max-width: 84ch; }
+@media (max-width: 860px) {
+  .bench-body { grid-template-columns: minmax(0, 1fr); }
+  .figs.two, .steps { grid-template-columns: minmax(0, 1fr); }
+  section.bench { padding: 20px; }
+}
+</style>
+
+<div class="wrap">
+<header class="top">
+  <span class="eyebrow">M2 GGB · exercice interactif · sélection de variables et apprentissage supervisé</span>
+  <h1>Boruta et projections supervisées</h1>
+  <p class="lede">Deux outils très utilisés en transcriptomique : Boruta, pour choisir les gènes qui comptent, et les projections supervisées (LDA, UMAP supervisée), pour construire des espaces où les groupes se séparent. Puissants, et faciles à mal utiliser : avec assez de gènes, on sépare n'importe quoi.</p>
+  <nav class="toc" aria-label="Étapes">
+    <a href="#principe">1 · Principe de Boruta</a><a href="#boruta">2 · Boruta en action</a><a href="#lda">3 · LDA sur du bruit</a><a href="#fuite">4 · Fuite de sélection</a><a href="#umap">5 · UMAP supervisée</a><a href="#regles">6 · Règles</a>
+  </nav>
+</header>
+
+<div class="act">Acte I · Choisir les gènes</div>
+
+<section class="bench" id="principe">
+  <div class="bench-head">
+    <span class="num">1 · Principe</span>
+    <h2>Boruta : battre son propre ombre</h2>
+    <p>Une forêt aléatoire attribue une importance à chaque gène, mais même un gène sans aucun lien avec les groupes obtient une importance non nulle. Boruta répond à la question : cette importance est-elle meilleure que celle d'un gène dont on a volontairement détruit l'information ?</p>
+  </div>
+  <div class="steps">
+    <div><b>1</b><h3>Créer des ombres</h3><p>Chaque gène est copié puis ses valeurs sont mélangées entre patients : la copie garde sa distribution mais perd tout lien avec les groupes.</p></div>
+    <div><b>2</b><h3>Entraîner une forêt</h3><p>Une forêt aléatoire est entraînée sur les vrais gènes et leurs ombres. Chaque gène reçoit une importance (diminution moyenne d'impureté de Gini).</p></div>
+    <div><b>3</b><h3>Compter les victoires</h3><p>Un gène marque un « hit » si son importance dépasse le meilleur des ombres (ou un percentile de leur distribution).</p></div>
+    <div><b>4</b><h3>Répéter et tester</h3><p>Après n itérations, un test binomial compare le nombre de hits à n/2 : <span style="color:var(--conf)">confirmé</span>, <span style="color:var(--rej)">rejeté</span>, ou <span style="color:var(--tent)">tentative</span> si on ne peut pas trancher.</p></div>
+  </div>
+</section>
+
+<section class="bench" id="boruta">
+  <div class="bench-head">
+    <span class="num">2 · Boruta en action</span>
+    <h2>Trouver le bon cutoff</h2>
+    <p>60 patients (30 malades, 30 témoins) et 100 gènes. 10 gènes portent un vrai signal, d'intensité décroissante ; 5 autres sont corrélés au plus fort d'entre eux ; les 85 restants sont du bruit. Modifiez un réglage : Boruta est relancé, itération par itération.</p>
+  </div>
+  <div class="bench-body">
+    <div class="controls">
+      <div class="ctl"><label for="bPerc">Seuil des ombres (percentile) <output id="bPercOut">100</output></label><input type="range" id="bPerc" min="50" max="100" step="5" value="100"><span class="hint">100 = le meilleur des ombres (Boruta classique).</span></div>
+      <div class="ctl"><label for="bP">p-value du test binomial <output id="bPOut">0.01</output></label><input type="range" id="bP" min="0" max="4" step="1" value="2"></div>
+      <label class="check"><input type="checkbox" id="bAdj" checked> Correction de Bonferroni</label>
+      <div class="ctl"><label for="bRuns">Itérations maximum <output id="bRunsOut">60</output></label><input type="range" id="bRuns" min="10" max="150" step="10" value="60"></div>
+      <label class="check"><input type="checkbox" id="bTruth"> Révéler les vrais gènes</label>
+      <div class="row"><button class="btn primary" id="bRun" type="button">Relancer</button><button class="btn" id="bNew" type="button">Nouveau jeu</button></div>
+      <span class="busy" id="bBusy" role="status"></span>
+      <div class="stats">
+        <div class="stat"><span class="k">Confirmés</span><span class="v" id="bConf">–</span></div>
+        <div class="stat"><span class="k">Tentatives</span><span class="v" id="bTent">–</span></div>
+        <div class="stat hl"><span class="k">Vrais positifs / 15</span><span class="v" id="bTp">–</span></div>
+        <div class="stat hl"><span class="k">Faux positifs</span><span class="v" id="bFp">–</span></div>
+      </div>
+    </div>
+    <div class="figs">
+      <figure><canvas id="cvBor" height="360" aria-label="Importances de Boruta par gène"></canvas>
+      <div class="legend"><span><i style="background:var(--conf)"></i>Confirmé</span><span><i style="background:var(--tent)"></i>Tentative</span><span><i style="background:var(--rej)"></i>Rejeté</span><span><i style="background:var(--shadow)"></i>Ombres : min, moyenne, max</span><span>▲ sous le nom = vrai gène</span></div></figure>
+      <figure><canvas id="cvBorHist" height="200" aria-label="Décisions au fil des itérations"></canvas><figcaption>Nombre de gènes confirmés, en tentative et rejetés au fil des itérations.</figcaption></figure>
+    </div>
+  </div>
+  <div class="look">
+    <div class="ask"><p><b>À vous :</b> descendez le percentile à 70 puis 50. Combien de faux positifs ? Remontez à 100 et réduisez les itérations à 10 : que deviennent les gènes au signal faible ? Quel réglage choisiriez-vous, et pourquoi ?</p></div>
+    <div><p><b>À observer :</b> comparer au meilleur des ombres est exigeant mais protège du bruit. Un percentile plus bas laisse entrer du bruit. Peu d'itérations laisse beaucoup de tentatives. Cochez « Révéler » : des gènes simplement corrélés au plus fort sont confirmés eux aussi. Boruta cherche tous les gènes pertinents, y compris redondants, pas un ensemble minimal.</p></div>
+  </div>
+</section>
+
+<div class="act">Acte II · Se méfier des espaces supervisés</div>
+
+<section class="bench" id="lda">
+  <div class="bench-head">
+    <span class="num">3 · LDA</span>
+    <h2>Séparer deux groupes… qui n'existent pas</h2>
+    <p>L'analyse discriminante linéaire (LDA) cherche la direction où les groupes sont le plus éloignés par rapport à leur dispersion. Ici, 30 + 30 échantillons d'entraînement et 30 + 30 de test, dont les étiquettes sont tirées au hasard sur des gènes de bruit pur (ou, en option, avec un faible vrai signal).</p>
+  </div>
+  <div class="bench-body">
+    <div class="controls">
+      <div class="ctl">
+        <span class="lab">Données</span>
+        <div class="seg" role="group" aria-label="Type de données">
+          <button type="button" id="lNoise" aria-pressed="true">Bruit pur</button>
+          <button type="button" id="lSig" aria-pressed="false">Signal faible</button>
+        </div>
+      </div>
+      <div class="ctl"><label for="lP">Gènes donnés à la LDA <output id="lPOut">10</output></label><input type="range" id="lP" min="0" max="10" step="1" value="3"></div>
+      <div class="ctl"><label for="lLam">Régularisation (shrinkage) <output id="lLamOut">0.00</output></label><input type="range" id="lLam" min="0" max="1" step="0.05" value="0"></div>
+      <button class="btn" id="lNew" type="button">Nouveau tirage</button>
+      <div class="stats">
+        <div class="stat"><span class="k">Précision entraînement</span><span class="v" id="lTr">–</span></div>
+        <div class="stat hl"><span class="k">Précision test</span><span class="v" id="lTe">–</span></div>
+      </div>
+    </div>
+    <div class="figs two">
+      <figure><canvas id="cvLtr" height="300" aria-label="Scores LDA, entraînement"></canvas><figcaption>Entraînement : score LDA de chaque échantillon.</figcaption></figure>
+      <figure><canvas id="cvLte" height="300" aria-label="Scores LDA, test"></canvas><figcaption>Test : mêmes poids, nouveaux échantillons.</figcaption></figure>
+    </div>
+  </div>
+  <div class="legend"><span><i style="background:var(--g0)"></i>Groupe A</span><span><i style="background:var(--g1)"></i>Groupe B</span><span>pointillés : seuil de décision</span></div>
+  <div class="look">
+    <div class="ask"><p><b>À vous :</b> sur du bruit pur, augmentez le nombre de gènes. À partir de combien la séparation d'entraînement devient-elle parfaite ? Que vaut la précision sur le test ? Que change la régularisation ?</p></div>
+    <div><p><b>À observer :</b> dès que le nombre de gènes approche le nombre d'échantillons, il existe toujours une direction qui sépare parfaitement deux groupes quelconques. La séparation d'entraînement ne prouve rien : seule la précision sur des données jamais vues compte, et elle reste à 50 % sur du bruit.</p></div>
+  </div>
+</section>
+
+<section class="bench" id="fuite">
+  <div class="bench-head">
+    <span class="num">4 · Fuite de sélection</span>
+    <h2>Choisir les gènes avant de couper train et test</h2>
+    <p>Erreur classique : on sélectionne les gènes les plus discriminants sur tout le jeu (par exemple avec Boruta ou un test t), puis on fait une validation croisée avec ces gènes. Le test a « vu » la sélection. Toujours sur du bruit pur, 300 gènes.</p>
+  </div>
+  <div class="bench-body">
+    <div class="controls">
+      <div class="ctl">
+        <span class="lab">Où sélectionner les gènes ?</span>
+        <div class="seg" role="group" aria-label="Lieu de la sélection">
+          <button type="button" id="fAll" aria-pressed="true">Sur tout le jeu</button>
+          <button type="button" id="fTr" aria-pressed="false">Sur l'entraînement</button>
+        </div>
+      </div>
+      <div class="ctl"><label for="fK">Gènes sélectionnés <output id="fKOut">20</output></label><input type="range" id="fK" min="0" max="6" step="1" value="3"></div>
+      <button class="btn" id="fNew" type="button">Nouveau tirage</button>
+      <div class="stats">
+        <div class="stat hl"><span class="k">Précision test (ce tirage)</span><span class="v" id="fAcc">–</span></div>
+      </div>
+    </div>
+    <div class="figs two">
+      <figure><canvas id="cvFte" height="300" aria-label="Scores LDA du test après sélection"></canvas><figcaption>Test : scores LDA après sélection des gènes.</figcaption></figure>
+      <figure><canvas id="cvFcurve" height="300" aria-label="Précision test selon le nombre de gènes sélectionnés"></canvas><figcaption>Précision test moyenne sur 12 tirages, selon le nombre de gènes sélectionnés.</figcaption></figure>
+    </div>
+  </div>
+  <div class="look">
+    <div class="ask"><p><b>À vous :</b> avec la sélection sur tout le jeu, la précision test dépasse nettement 50 % sur du bruit. Pourquoi ? Que faut-il faire à la place ?</p></div>
+    <div><p><b>À observer :</b> la sélection a choisi les gènes qui, par hasard, séparent aussi les échantillons de test. La règle : toute étape qui regarde les étiquettes (sélection, normalisation supervisée, réglage d'hyperparamètres) doit être refaite à l'intérieur de chaque pli de validation, ou évaluée sur une cohorte externe.</p></div>
+  </div>
+</section>
+
+<section class="bench" id="umap">
+  <div class="bench-head">
+    <span class="num">5 · Non linéaire</span>
+    <h2>Une UMAP supervisée dessine les groupes qu'on lui donne</h2>
+    <p>240 échantillons de bruit pur en 30 dimensions. 180 reçoivent une étiquette tirée au hasard parmi trois ; 60 sont gardés à part, sans étiquette. Une UMAP supervisée coupe les liens du graphe de voisins entre échantillons d'étiquettes différentes. Les échantillons de test sont ensuite placés à la position moyenne de leurs plus proches voisins.</p>
+  </div>
+  <div class="bench-body">
+    <div class="controls">
+      <div class="ctl">
+        <span class="lab">Données</span>
+        <div class="seg" role="group" aria-label="Type de données pour l'UMAP">
+          <button type="button" id="uNoise" aria-pressed="true">Bruit pur</button>
+          <button type="button" id="uSig" aria-pressed="false">Groupes réels faibles</button>
+        </div>
+      </div>
+      <div class="ctl"><label for="uW">Poids de la supervision <output id="uWOut">0.0</output></label><input type="range" id="uW" min="0" max="1" step="0.1" value="0"></div>
+      <label class="check"><input type="checkbox" id="uTest" checked> Afficher les échantillons de test</label>
+      <button class="btn" id="uNew" type="button">Nouveau tirage</button>
+      <div class="stats">
+        <div class="stat"><span class="k">Classement k-NN, entraînement</span><span class="v" id="uTr">–</span></div>
+        <div class="stat hl"><span class="k">Classement k-NN, test</span><span class="v" id="uTe">–</span></div>
+      </div>
+      <span class="hint">Hasard : 33 %.</span>
+    </div>
+    <div class="figs">
+      <figure><canvas id="cvUmap" height="440" aria-label="UMAP supervisée"></canvas>
+      <div class="legend"><span><i style="background:var(--g0)"></i>Étiquette 1</span><span><i style="background:var(--g1)"></i>Étiquette 2</span><span><i style="background:var(--g2)"></i>Étiquette 3</span><span>cercles vides = test (couleur : sa vraie étiquette)</span></div></figure>
+    </div>
+  </div>
+  <div class="look">
+    <div class="ask"><p><b>À vous :</b> montez le poids de la supervision sur du bruit pur. Que montre la figure ? Où tombent les échantillons de test ? Recommencez avec des groupes réels faibles.</p></div>
+    <div><p><b>À observer :</b> avec assez de supervision, l'UMAP dessine trois groupes parfaitement séparés à partir d'étiquettes aléatoires. Une telle figure, publiée seule, serait trompeuse. Les échantillons de test, eux, retombent au hasard. Avec de vrais groupes, la supervision aide aussi le test : c'est la seule différence visible.</p></div>
+  </div>
+</section>
+
+<section class="bench" id="regles">
+  <div class="bench-head">
+    <span class="num">6 · À retenir</span>
+    <h2>Quatre règles avant de croire une séparation</h2>
+  </div>
+  <div class="rules">
+    <div><h3>Un espace supervisé n'est pas une preuve</h3><p>LDA, PLS-DA, UMAP supervisée séparent par construction les groupes qu'on leur donne. Seule une évaluation sur des données indépendantes dit si la séparation existe.</p></div>
+    <div><h3>La sélection fait partie du modèle</h3><p>Boruta, test t ou filtre de variance, s'il utilise les étiquettes, se refait dans chaque pli de validation croisée.</p></div>
+    <div><h3>Comparer à une ombre</h3><p>Le principe de Boruta vaut partout : comparez votre résultat à celui obtenu avec des étiquettes permutées. Si l'écart est faible, il n'y a rien.</p></div>
+    <div><h3>Plus de gènes que d'échantillons</h3><p>Avec p ≥ n, tout se sépare. Régularisez, réduisez la dimension, et méfiez-vous des précisions d'entraînement.</p></div>
+  </div>
+</section>
+
+<footer>Données simulées pour l'enseignement. Méthodes : forêt aléatoire implémentée dans la page (impureté de Gini, mtry = √p, profondeur limitée), Boruta avec test binomial et correction de Bonferroni optionnelle (proche du paquet R Boruta ; le percentile reprend le paramètre « perc » de BorutaPy), LDA de Fisher avec shrinkage vers l'identité, sélection par test t, disposition de graphe de type UMAP avec affaiblissement des arêtes entre étiquettes différentes.</footer>
+</div>
+
+<script>
+(() => {
+"use strict";
+const $=id=>document.getElementById(id);
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function gauss(rand){let s=null;return function(){if(s!==null){const v=s;s=null;return v;}let u=0;while(u===0)u=rand();const v=rand();const r=Math.sqrt(-2*Math.log(u));s=r*Math.sin(2*Math.PI*v);return r*Math.cos(2*Math.PI*v);};}
+function shuffle(a,rand){for(let i=a.length-1;i>0;i--){const j=Math.floor(rand()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim();}
+function setup(cv){const dpr=window.devicePixelRatio||1,w=cv.clientWidth,h=parseInt(cv.getAttribute("height"),10);if(cv.width!==Math.round(w*dpr)||cv.height!==Math.round(h*dpr)){cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);cv.style.height=h+"px";}const g=cv.getContext("2d");g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,w,h);return{g,w,h};}
+function niceTicks(a,b,n=5){const span=b-a||1,step0=span/n,mag=Math.pow(10,Math.floor(Math.log10(step0))),st=[1,2,2.5,5,10].map(x=>x*mag).find(x=>span/x<=n)||10*mag;const t=[];for(let v=Math.ceil(a/st)*st;v<=b+1e-9;v+=st)t.push(+v.toFixed(10));return t;}
+function fmt(v){if(v===0)return"0";const a=Math.abs(v);if(a>=10)return v.toFixed(0);if(a>=1)return v.toFixed(1).replace(/\.0$/,"");return v.toFixed(3).replace(/0+$/,"");}
+function axes(g,box,xr,yr,xl,yl,opt={}){const{x,y,w,h}=box;g.strokeStyle=css("--grid");g.lineWidth=1;g.fillStyle=css("--muted");g.font="12px "+css("--mono");const X=v=>x+(v-xr[0])/(xr[1]-xr[0])*w,Y=v=>y+h-(v-yr[0])/(yr[1]-yr[0])*h;if(!opt.noX){g.textAlign="center";g.textBaseline="top";for(const t of (opt.xt||niceTicks(xr[0],xr[1]))){g.beginPath();g.moveTo(X(t),y);g.lineTo(X(t),y+h);g.stroke();g.fillText(opt.xfmt?opt.xfmt(t):fmt(t),X(t),y+h+6);}}if(!opt.noY){g.textAlign="right";g.textBaseline="middle";for(const t of niceTicks(yr[0],yr[1])){g.beginPath();g.moveTo(x,Y(t));g.lineTo(x+w,Y(t));g.stroke();g.fillText(opt.yfmt?opt.yfmt(t):fmt(t),x-6,Y(t));}}g.strokeStyle=css("--line");g.strokeRect(x+.5,y+.5,w-1,h-1);g.fillStyle=css("--ink");g.font="13px "+css("--body");g.textAlign="center";g.textBaseline="bottom";if(xl)g.fillText(xl,x+w/2,y+h+(opt.noX?22:38));if(yl){g.save();g.translate(x-(opt.noY?12:46),y+h/2);g.rotate(-Math.PI/2);g.fillText(yl,0,0);g.restore();}return{X,Y};}
+const redraw=[];let rz=null;window.addEventListener("resize",()=>{clearTimeout(rz);rz=setTimeout(()=>redraw.forEach(f=>f()),120);});
+const mq=window.matchMedia("(prefers-color-scheme: dark)");mq.addEventListener&&mq.addEventListener("change",()=>redraw.forEach(f=>f()));
+new MutationObserver(()=>redraw.forEach(f=>f())).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+function seg(btns,cb){btns.forEach((b,i)=>b.addEventListener("click",()=>{btns.forEach((x,j)=>x.setAttribute("aria-pressed",i===j));cb(i);}));}
+const pct=v=>Math.round(v*100)+" %";
+
+/* ================= Acte I : Boruta ================= */
+const BOR=(function(){const n=60,p=100,EFF=[1.3,1.1,1.0,0.9,0.8,0.7,0.6,0.5,0.45,0.4];let seed=1,X,y,names,truth;
+function gen(){const rand=mulberry32(1000+seed),r=gauss(rand);y=Array.from({length:n},(_,i)=>i<30?0:1);X=[];for(let f=0;f<p;f++){const col=new Float64Array(n);for(let i=0;i<n;i++)col[i]=r()+(f<10?EFF[f]*y[i]:0);X.push(col);}for(let f=10;f<15;f++)for(let i=0;i<n;i++)X[f][i]=0.8*X[0][i]+0.6*r();const perm=shuffle([...Array(p).keys()],rand);// noms mélangés pour que l'ordre ne trahisse rien
+names=[];truth=new Uint8Array(p);perm.forEach((f,k)=>{names[f]="G"+String(k+1).padStart(3,"0");});for(let f=0;f<15;f++)truth[f]=1;}
+// arbre de décision (Gini) ; cols : tableau de colonnes Float64Array
+function buildForest(cols,ntree,rand,imp){const P=cols.length,mtry=Math.max(1,Math.floor(Math.sqrt(P)));const ord=new Int32Array(n);for(let t=0;t<ntree;t++){const boot=Array.from({length:n},()=>Math.floor(rand()*n));split(boot,0);}
+function gini(idx){let a=0;for(const i of idx)a+=y[i];const q=a/idx.length;return 1-q*q-(1-q)*(1-q);}
+function split(idx,depth){const m=idx.length;if(m<5||depth>=7)return;let pos=0;for(const i of idx)pos+=y[i];if(pos===0||pos===m)return;const g0=gini(idx);let best=null;const feats=new Set();while(feats.size<Math.min(mtry,P))feats.add(Math.floor(rand()*P));for(const f of feats){const col=cols[f];const s=idx.slice().sort((a,b)=>col[a]-col[b]);let lp=0;for(let k=0;k<m-1;k++){lp+=y[s[k]];if(col[s[k]]===col[s[k+1]])continue;const nl=k+1,nr=m-nl,ql=lp/nl,qr=(pos-lp)/nr;const gl=1-ql*ql-(1-ql)**2,gr=1-qr*qr-(1-qr)**2;const dec=m*g0-nl*gl-nr*gr;if(!best||dec>best.dec)best={dec,f,thr:(col[s[k]]+col[s[k+1]])/2};}}if(!best||best.dec<=1e-12)return;imp[best.f]+=best.dec;const L=[],R=[];for(const i of idx)(cols[best.f][i]<=best.thr?L:R).push(i);split(L,depth+1);split(R,depth+1);}}
+function logC(nn,k){let s=0;for(let i=1;i<=k;i++)s+=Math.log((nn-k+i)/i);return s;}
+function binomUpper(k,nn){let s=0;for(let j=k;j<=nn;j++)s+=Math.exp(logC(nn,j)-nn*Math.LN2);return s;}
+function binomLower(k,nn){let s=0;for(let j=0;j<=k;j++)s+=Math.exp(logC(nn,j)-nn*Math.LN2);return s;}
+let st=null,timer=null;
+function start(){if(timer)cancelAnimationFrame(timer);const perc=+$("bPerc").value,pv=[0.001,0.005,0.01,0.05,0.1][+$("bP").value],adj=$("bAdj").checked,maxR=+$("bRuns").value;$("bPercOut").textContent=perc;$("bPOut").textContent=pv;$("bRunsOut").textContent=maxR;st={dec:new Int8Array(p),hits:new Int32Array(p),hist:Array.from({length:p},()=>[]),sh:[],counts:[],it:0,perc,pv,adj,maxR,rand:mulberry32(77+seed)};$("bBusy").textContent="Itérations en cours…";const step=()=>{for(let rep=0;rep<2&&st.it<st.maxR;rep++)iterate();draw();const tent=Array.from(st.dec).filter(d=>d===0).length;if(st.it<st.maxR&&tent>0)timer=requestAnimationFrame(step);else{timer=null;$("bBusy").textContent=`Terminé après ${st.it} itérations.`;}};step();}
+function iterate(){const rand=st.rand;const act=[...Array(p).keys()].filter(f=>st.dec[f]!==-1);const cols=act.map(f=>X[f]);const shadows=act.map(f=>{const c=Float64Array.from(X[f]);shuffle(c,rand);return c;});const all=cols.concat(shadows),imp=new Float64Array(all.length);buildForest(all,60,rand,imp);const shImp=Array.from(imp.slice(act.length)).sort((a,b)=>a-b);const q=st.perc>=100?shImp[shImp.length-1]:shImp[Math.min(shImp.length-1,Math.floor(st.perc/100*(shImp.length-1)))];st.it++;st.sh.push([shImp[0],shImp.reduce((a,b)=>a+b,0)/shImp.length,shImp[shImp.length-1],q]);act.forEach((f,k)=>{st.hist[f].push(imp[k]);if(imp[k]>q)st.hits[f]++;});const tent=[...Array(p).keys()].filter(f=>st.dec[f]===0);const thr=st.adj?st.pv/Math.max(1,tent.length):st.pv;for(const f of tent){const pc=binomUpper(st.hits[f],st.it),pr=binomLower(st.hits[f],st.it);if(pc<thr)st.dec[f]=1;else if(pr<thr)st.dec[f]=-1;}const c=[0,0,0];st.dec.forEach(d=>c[d+1]++);st.counts.push(c);}
+function med(a){if(!a.length)return 0;const s=a.slice().sort((x,y)=>x-y);return s[s.length>>1];}
+function draw(){if(!st)return;const showT=$("bTruth").checked;let conf=0,tent=0,tp=0,fp=0;for(let f=0;f<p;f++){if(st.dec[f]===1){conf++;truth[f]?tp++:fp++;}if(st.dec[f]===0)tent++;}$("bConf").textContent=conf;$("bTent").textContent=tent;$("bTp").textContent=tp;$("bFp").textContent=fp;
+const ranked=[...Array(p).keys()].sort((a,b)=>med(st.hist[b])-med(st.hist[a])).slice(0,30);const sh=[0,1,2].map(k=>st.sh.map(s=>s[k]));const items=[...ranked.map(f=>({lab:names[f],vals:st.hist[f],col:st.dec[f]===1?css("--conf"):st.dec[f]===-1?css("--rej"):css("--tent"),t:truth[f]})),{lab:"ombre min",vals:sh[0],col:css("--shadow")},{lab:"ombre moy.",vals:sh[1],col:css("--shadow")},{lab:"ombre max",vals:sh[2],col:css("--shadow")}];
+const cv=$("cvBor"),{g,w,h}=setup(cv),box={x:54,y:12,w:w-66,h:h-90};let ymax=0;items.forEach(it=>it.vals.forEach(v=>{if(v>ymax)ymax=v;}));ymax=ymax*1.08||1;const{Y}=axes(g,box,[0,1],[0,ymax],"","importance (Gini)",{noX:true});const bw=box.w/items.length;
+if(st.sh.length){const q=med(st.sh.map(s=>s[3]));g.strokeStyle=css("--shadow");g.setLineDash([5,4]);g.beginPath();g.moveTo(box.x,Y(q));g.lineTo(box.x+box.w,Y(q));g.stroke();g.setLineDash([]);g.fillStyle=css("--shadow");g.font="12px "+css("--mono");g.textAlign="left";g.textBaseline="bottom";g.fillText(st.perc>=100?"seuil = ombre max (médiane)":`seuil = percentile ${st.perc} des ombres`,box.x+6,Y(q)-3);}
+items.forEach((it,k)=>{const xc=box.x+bw*k+bw/2;if(it.vals.length){const s=it.vals.slice().sort((a,b)=>a-b),qq=f=>s[Math.min(s.length-1,Math.floor(f*(s.length-1)))];g.strokeStyle=it.col;g.lineWidth=1;g.beginPath();g.moveTo(xc,Y(s[0]));g.lineTo(xc,Y(s[s.length-1]));g.stroke();g.fillStyle=it.col;g.globalAlpha=0.85;g.fillRect(xc-bw*0.32,Y(qq(0.75)),bw*0.64,Math.max(1,Y(qq(0.25))-Y(qq(0.75))));g.globalAlpha=1;g.strokeStyle=css("--panel");g.lineWidth=1.5;g.beginPath();g.moveTo(xc-bw*0.32,Y(qq(0.5)));g.lineTo(xc+bw*0.32,Y(qq(0.5)));g.stroke();}g.save();g.translate(xc,box.y+box.h+8);g.rotate(-Math.PI/3);g.fillStyle=css("--muted");g.font="11px "+css("--mono");g.textAlign="right";g.textBaseline="middle";g.fillText(it.lab,0,0);g.restore();if(showT&&it.t){g.fillStyle=css("--ink");g.beginPath();g.moveTo(xc,box.y+box.h+2);g.lineTo(xc-4,box.y+box.h+8);g.lineTo(xc+4,box.y+box.h+8);g.closePath();g.fill();}});
+const cv2=$("cvBorHist"),o=setup(cv2),b2={x:54,y:10,w:o.w-66,h:o.h-52};const T=Math.max(st.maxR,st.counts.length);const A=axes(o.g,b2,[0,T],[0,p],"itération","gènes");[[2,css("--conf")],[1,css("--tent")],[0,css("--rej")]].forEach(([k,col])=>{o.g.strokeStyle=col;o.g.lineWidth=2.4;o.g.beginPath();st.counts.forEach((c,i)=>{const X0=A.X(i+1),Y0=A.Y(c[k]);i?o.g.lineTo(X0,Y0):o.g.moveTo(X0,Y0);});o.g.stroke();});}
+let t0=null;const restart=()=>{clearTimeout(t0);t0=setTimeout(start,150);};
+["bPerc","bP","bRuns"].forEach(id=>$(id).addEventListener("input",()=>{$("bPercOut").textContent=$("bPerc").value;$("bPOut").textContent=[0.001,0.005,0.01,0.05,0.1][+$("bP").value];$("bRunsOut").textContent=$("bRuns").value;restart();}));$("bAdj").addEventListener("change",restart);$("bTruth").addEventListener("change",draw);$("bRun").addEventListener("click",start);$("bNew").addEventListener("click",()=>{seed++;gen();start();});redraw.push(draw);gen();start();})();
+
+/* ================= Acte II : LDA ================= */
+// LDA de Fisher à deux classes, avec shrinkage vers l'identité
+function ldaFit(Xtr,ytr,lam){const n=Xtr.length,p=Xtr[0].length;const m0=new Float64Array(p),m1=new Float64Array(p);let n0=0,n1=0;Xtr.forEach((x,i)=>{const m=ytr[i]?m1:m0;ytr[i]?n1++:n0++;for(let j=0;j<p;j++)m[j]+=x[j];});for(let j=0;j<p;j++){m0[j]/=n0;m1[j]/=n1;}const S=new Float64Array(p*p);const d=new Float64Array(p);Xtr.forEach((x,i)=>{const m=ytr[i]?m1:m0;for(let j=0;j<p;j++)d[j]=x[j]-m[j];for(let a=0;a<p;a++){const da=d[a];if(!da)continue;for(let b=a;b<p;b++)S[a*p+b]+=da*d[b];}});for(let a=0;a<p;a++)for(let b=a;b<p;b++){S[a*p+b]/=(n-2);S[b*p+a]=S[a*p+b];}let tr=0;for(let a=0;a<p;a++)tr+=S[a*p+a];const mu=tr/p;for(let a=0;a<p;a++)for(let b=0;b<p;b++)S[a*p+b]=(1-lam)*S[a*p+b]+(a===b?lam*mu+1e-6*mu:0);
+// Cholesky
+const L=new Float64Array(p*p);for(let i=0;i<p;i++){for(let j=0;j<=i;j++){let s=S[i*p+j];for(let k=0;k<j;k++)s-=L[i*p+k]*L[j*p+k];if(i===j)L[i*p+i]=Math.sqrt(Math.max(s,1e-12));else L[i*p+j]=s/L[j*p+j];}}const rhs=Float64Array.from(m1,(v,j)=>v-m0[j]);const z=new Float64Array(p);for(let i=0;i<p;i++){let s=rhs[i];for(let k=0;k<i;k++)s-=L[i*p+k]*z[k];z[i]=s/L[i*p+i];}const w=new Float64Array(p);for(let i=p-1;i>=0;i--){let s=z[i];for(let k=i+1;k<p;k++)s-=L[k*p+i]*w[k];w[i]=s/L[i*p+i];}let c=0;for(let j=0;j<p;j++)c+=w[j]*(m0[j]+m1[j])/2;return{w,c};}
+const proj=(M,x)=>{let s=-M.c;for(let j=0;j<x.length;j++)s+=M.w[j]*x[j];return s;};
+function acc(M,X,y){let ok=0;X.forEach((x,i)=>{if((proj(M,x)>0?1:0)===y[i])ok++;});return ok/X.length;}
+function histPanel(id,scores,ys,title){const cv=$(id),{g,w,h}=setup(cv),box={x:44,y:12,w:w-58,h:h-56};let lo=Infinity,hi=-Infinity;scores.forEach(v=>{lo=Math.min(lo,v);hi=Math.max(hi,v);});const span=Math.max(Math.abs(lo),Math.abs(hi))*1.1||1;const B=24,h0=new Float64Array(B),h1=new Float64Array(B);scores.forEach((v,i)=>{const b=Math.max(0,Math.min(B-1,Math.floor((v+span)/(2*span)*B)));(ys[i]?h1:h0)[b]++;});const top=Math.max(...h0,...h1,1)*1.15;const A=axes(g,box,[-span,span],[0,top],title,"échantillons");const bw=box.w/B;for(let b=0;b<B;b++){const x0=box.x+b*bw;g.globalAlpha=0.7;g.fillStyle=css("--g0");g.fillRect(x0+1,A.Y(h0[b]),bw/2-1,A.Y(0)-A.Y(h0[b]));g.fillStyle=css("--g1");g.fillRect(x0+bw/2,A.Y(h1[b]),bw/2-1,A.Y(0)-A.Y(h1[b]));g.globalAlpha=1;}g.strokeStyle=css("--ink");g.setLineDash([5,4]);g.beginPath();g.moveTo(A.X(0),box.y);g.lineTo(A.X(0),box.y+box.h);g.stroke();g.setLineDash([]);}
+
+/* 3 · LDA sur du bruit */
+(function(){const PS=[2,5,10,20,30,40,50,60,80,120,200],PMAX=200,NTR=60,NTE=60;let seed=1,signal=0,D=null;
+function gen(){const r=gauss(mulberry32(500+seed));const mk=n=>{const y=Array.from({length:n},(_,i)=>i<n/2?0:1);const X=y.map(l=>Float64Array.from({length:PMAX},(_,j)=>r()+(signal&&j<5?0.6*l:0)));return{X,y};};D={tr:mk(NTR),te:mk(NTE)};}
+function run(){const p=PS[+$("lP").value],lam=+$("lLam").value;$("lPOut").textContent=p;$("lLamOut").textContent=lam.toFixed(2);const cut=X=>X.map(x=>x.subarray(0,p));const Xtr=cut(D.tr.X),Xte=cut(D.te.X);const M=ldaFit(Xtr,D.tr.y,lam);$("lTr").textContent=pct(acc(M,Xtr,D.tr.y));$("lTe").textContent=pct(acc(M,Xte,D.te.y));histPanel("cvLtr",Xtr.map(x=>proj(M,x)),D.tr.y,"score LDA (entraînement)");histPanel("cvLte",Xte.map(x=>proj(M,x)),D.te.y,"score LDA (test)");}
+["lP","lLam"].forEach(id=>$(id).addEventListener("input",run));seg([$("lNoise"),$("lSig")],i=>{signal=i;gen();run();});$("lNew").addEventListener("click",()=>{seed++;gen();run();});redraw.push(run);gen();run();})();
+
+/* 4 · Fuite de sélection */
+(function(){const KS=[2,5,10,20,40,60,100],P=300,NTR=60,NTE=60,LAM=0.3;let seed=1,mode=0,D=null,curve=null;
+function mk(seedv){const r=gauss(mulberry32(seedv));const f=n=>{const y=Array.from({length:n},(_,i)=>i<n/2?0:1);return{X:y.map(()=>Float64Array.from({length:P},()=>r())),y};};return{tr:f(NTR),te:f(NTE)};}
+function tstat(X,y){const p=X[0].length,out=new Float64Array(p);for(let j=0;j<p;j++){let m0=0,m1=0,n0=0,n1=0;X.forEach((x,i)=>{if(y[i]){m1+=x[j];n1++;}else{m0+=x[j];n0++;}});m0/=n0;m1/=n1;let v=0;X.forEach((x,i)=>{v+=(x[j]-(y[i]?m1:m0))**2;});v/=(X.length-2);out[j]=Math.abs(m1-m0)/Math.sqrt(v*(1/n0+1/n1));}return out;}
+function evalOne(d,k,leak){const X=leak?d.tr.X.concat(d.te.X):d.tr.X,y=leak?d.tr.y.concat(d.te.y):d.tr.y;const t=tstat(X,y);const sel=[...Array(P).keys()].sort((a,b)=>t[b]-t[a]).slice(0,k);const pick=XX=>XX.map(x=>Float64Array.from(sel,j=>x[j]));const M=ldaFit(pick(d.tr.X),d.tr.y,LAM);const Xte=pick(d.te.X);return{acc:acc(M,Xte,d.te.y),scores:Xte.map(x=>proj(M,x))};}
+function computeCurve(){curve={leak:[],honest:[]};for(const k of KS){let a=0,b=0;for(let r=0;r<12;r++){const d=mk(9000+r);a+=evalOne(d,k,true).acc;b+=evalOne(d,k,false).acc;}curve.leak.push(a/12);curve.honest.push(b/12);}}
+function run(){const k=KS[+$("fK").value];$("fKOut").textContent=k;const res=evalOne(D,k,mode===0);$("fAcc").textContent=pct(res.acc);histPanel("cvFte",res.scores,D.te.y,"score LDA (test)");drawCurve();}
+function drawCurve(){if(!curve)return;const cv=$("cvFcurve"),{g,w,h}=setup(cv),box={x:54,y:12,w:w-68,h:h-56};const A=axes(g,box,[0,KS.length-1],[0.3,1],"gènes sélectionnés","précision test",{xt:KS.map((_,i)=>i),xfmt:i=>KS[i],yfmt:v=>Math.round(v*100)+" %"});g.strokeStyle=css("--muted");g.setLineDash([5,4]);g.beginPath();g.moveTo(box.x,A.Y(0.5));g.lineTo(box.x+box.w,A.Y(0.5));g.stroke();g.setLineDash([]);[[curve.leak,css("--rej"),"sélection sur tout le jeu"],[curve.honest,css("--conf"),"sélection sur l'entraînement"]].forEach(([arr,col,lab],li)=>{g.strokeStyle=col;g.fillStyle=col;g.lineWidth=2.6;g.beginPath();arr.forEach((v,i)=>{i?g.lineTo(A.X(i),A.Y(v)):g.moveTo(A.X(i),A.Y(v));});g.stroke();arr.forEach((v,i)=>{g.beginPath();g.arc(A.X(i),A.Y(v),3.6,0,2*Math.PI);g.fill();});g.font="12.5px "+css("--body");g.textAlign="right";g.textBaseline="bottom";g.fillText(lab,box.x+box.w-8,A.Y(arr[arr.length-1])-(li?-18:6));});const kk=+$("fK").value;g.strokeStyle=css("--accent");g.lineWidth=1;g.beginPath();g.moveTo(A.X(kk),box.y);g.lineTo(A.X(kk),box.y+box.h);g.stroke();}
+$("fK").addEventListener("input",run);seg([$("fAll"),$("fTr")],i=>{mode=i;run();});$("fNew").addEventListener("click",()=>{seed++;D=mk(700+seed);run();});redraw.push(run);D=mk(701);setTimeout(()=>{computeCurve();run();},30);run();})();
+
+/* 5 · UMAP supervisée */
+(function(){const N=240,NTR=180,DIM=30,K=15;let seed=1,signal=0,X,lab,ord,Y=null,anim=null;
+function gen(){const rand=mulberry32(300+seed),r=gauss(rand);lab=Array.from({length:N},()=>Math.floor(rand()*3));const cent=[0,1,2].map(()=>Float64Array.from({length:DIM},()=>r()*0.42));X=lab.map(l=>Float64Array.from({length:DIM},(_,j)=>r()+(signal?cent[l][j]:0)));ord=[];for(let i=0;i<N;i++){const ds=[];for(let j=0;j<NTR;j++){if(i===j)continue;let s=0;for(let c=0;c<DIM;c++){const d=X[i][c]-X[j][c];s+=d*d;}ds.push([s,j]);}ds.sort((a,b)=>a[0]-b[0]);ord.push(ds.slice(0,K));}}
+function run(){const sw=+$("uW").value;$("uWOut").textContent=sw.toFixed(1);// graphe flou sur l'entraînement
+const W=new Map();for(let i=0;i<NTR;i++){const ds=ord[i].map(x=>Math.sqrt(x[0])),rho=ds[0],tgt=Math.log2(K);let lo=1e-6,hi=1e3,sg=1;for(let it=0;it<50;it++){sg=(lo+hi)/2;let f=0;for(const d of ds)f+=Math.exp(-Math.max(0,d-rho)/sg);if(f>tgt)hi=sg;else lo=sg;}ord[i].forEach(([,j],q)=>{let w=Math.exp(-Math.max(0,ds[q]-rho)/sg);if(lab[i]!==lab[j])w*=Math.pow(1-sw,3);const key=i<j?i*N+j:j*N+i,o=W.get(key);W.set(key,o===undefined?w:o+w-o*w);});}
+// supervision : liens supplémentaires entre échantillons de même étiquette
+const rnd=mulberry32(11);if(sw>0){for(let i=0;i<NTR;i++){for(let e=0;e<Math.round(6*sw);e++){const j=Math.floor(rnd()*NTR);if(j===i||lab[j]!==lab[i])continue;const key=i<j?i*N+j:j*N+i;W.set(key,Math.max(W.get(key)||0,sw));}}}
+const E=[];for(const[key,w]of W)E.push([Math.floor(key/N),key%N,w]);Y=Array.from({length:NTR},()=>[(rnd()-0.5)*6,(rnd()-0.5)*6]);const a=1.58,b=0.9,EP=250;let ep=0;if(anim)cancelAnimationFrame(anim);const reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const step=()=>{const until=reduce?EP:Math.min(EP,ep+12);for(;ep<until;ep++){const al=1-ep/EP;for(const[i,j,wt]of E){if(rnd()>wt)continue;const yi=Y[i],yj=Y[j];let dx=yi[0]-yj[0],dy=yi[1]-yj[1],dd=dx*dx+dy*dy;if(dd>0){const gc=-2*a*b*Math.pow(dd,b-1)/(1+a*Math.pow(dd,b));const gx=Math.max(-4,Math.min(4,gc*dx))*al,gy=Math.max(-4,Math.min(4,gc*dy))*al;yi[0]+=gx;yi[1]+=gy;yj[0]-=gx;yj[1]-=gy;}for(let s=0;s<5;s++){const q=Math.floor(rnd()*NTR);if(q===i)continue;const yq=Y[q];dx=yi[0]-yq[0];dy=yi[1]-yq[1];dd=dx*dx+dy*dy;const gc=2*b/((0.001+dd)*(1+a*Math.pow(dd,b)));yi[0]+=Math.max(-4,Math.min(4,gc*dx))*al;yi[1]+=Math.max(-4,Math.min(4,gc*dy))*al;}}}place();draw();if(ep<EP)anim=requestAnimationFrame(step);else{anim=null;score();}};step();}
+let YT=[];function place(){YT=[];for(let i=NTR;i<N;i++){let x=0,y=0;ord[i].forEach(([,j])=>{x+=Y[j][0];y+=Y[j][1];});YT.push([x/K,y/K]);}}
+function knnAcc(points,labels,queries,qlab,skipSelf){let ok=0;queries.forEach((q,qi)=>{const ds=points.map((p,j)=>[(p[0]-q[0])**2+(p[1]-q[1])**2,j]).filter(([,j])=>!(skipSelf&&j===qi)).sort((a,b)=>a[0]-b[0]).slice(0,10);const v=[0,0,0];ds.forEach(([,j])=>v[labels[j]]++);const pr=v.indexOf(Math.max(...v));if(pr===qlab[qi])ok++;});return ok/queries.length;}
+function score(){$("uTr").textContent=pct(knnAcc(Y,lab,Y,lab.slice(0,NTR),true));$("uTe").textContent=pct(knnAcc(Y,lab,YT,lab.slice(NTR),false));}
+function draw(){if(!Y)return;const cv=$("cvUmap"),{g,w,h}=setup(cv),box={x:10,y:10,w:w-20,h:h-20};const all=$("uTest").checked?Y.concat(YT):Y;let x0=Infinity,x1=-Infinity,y0=Infinity,y1=-Infinity;all.forEach(p=>{x0=Math.min(x0,p[0]);x1=Math.max(x1,p[0]);y0=Math.min(y0,p[1]);y1=Math.max(y1,p[1]);});const s=Math.min(box.w/((x1-x0)||1),box.h/((y1-y0)||1))*0.94,ox=box.x+(box.w-(x1-x0)*s)/2,oy=box.y+(box.h-(y1-y0)*s)/2;g.strokeStyle=css("--line");g.strokeRect(.5,.5,w-1,h-1);const C=[css("--g0"),css("--g1"),css("--g2")];Y.forEach((p,i)=>{g.fillStyle=C[lab[i]];g.globalAlpha=0.8;g.beginPath();g.arc(ox+(p[0]-x0)*s,oy+(p[1]-y0)*s,4,0,2*Math.PI);g.fill();});g.globalAlpha=1;if($("uTest").checked){g.lineWidth=2.2;YT.forEach((p,i)=>{g.strokeStyle=C[lab[NTR+i]];g.beginPath();g.arc(ox+(p[0]-x0)*s,oy+(p[1]-y0)*s,5.5,0,2*Math.PI);g.stroke();});}}
+let tU=null;$("uW").addEventListener("input",()=>{$("uWOut").textContent=(+$("uW").value).toFixed(1);clearTimeout(tU);tU=setTimeout(run,80);});$("uTest").addEventListener("change",draw);seg([$("uNoise"),$("uSig")],i=>{signal=i;gen();run();});$("uNew").addEventListener("click",()=>{seed++;gen();run();});redraw.push(draw);gen();run();})();
+})();
+</script>
+
+</body></html>

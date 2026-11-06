@@ -1,0 +1,509 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Bac à sable RNA-seq</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap">
+<style>
+/* Layout : cahier de labo — une colonne de « paillasses » numérotées, contrôles à gauche, figure à droite */
+:root {
+  --bg: #F2F4F6;
+  --panel: #FFFFFF;
+  --ink: #142033;
+  --muted: #566274;
+  --line: #D7DDE4;
+  --accent: #C25E1C;
+  --accent-soft: #F6E3D5;
+  --blue: #2E6FA8;
+  --grid: #E6EAEF;
+  --c1: #2E6FA8; --c2: #D9702A; --c3: #2A9D8F; --c4: #7A5BA6; --c5: #B8901C; --c6: #C8557A;
+  --c7: #5C6B7A; --c8: #5E9E5A; --c9: #9C5B33; --c10: #3FA7D6; --c11: #E07A5F; --c12: #8D6CAB;
+  --display: "Source Serif 4", Georgia, serif;
+  --body: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0F1622; --panel: #172133; --ink: #E8EDF3; --muted: #A3AFBF; --line: #2A3850;
+    --accent: #F0954F; --accent-soft: #3A2A1F; --blue: #6FA8DA; --grid: #223047;
+    --c1: #6FA8DA; --c2: #F0954F; --c3: #4FC1B2; --c4: #A88BD1; --c5: #D8B444; --c6: #E07FA0;
+    --c7: #93A1B1; --c8: #86C281; --c9: #CC8B62; --c10: #6CC4EC; --c11: #F29A82; --c12: #B497D3;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0F1622; --panel: #172133; --ink: #E8EDF3; --muted: #A3AFBF; --line: #2A3850;
+  --accent: #F0954F; --accent-soft: #3A2A1F; --blue: #6FA8DA; --grid: #223047;
+  --c1: #6FA8DA; --c2: #F0954F; --c3: #4FC1B2; --c4: #A88BD1; --c5: #D8B444; --c6: #E07FA0;
+  --c7: #93A1B1; --c8: #86C281; --c9: #CC8B62; --c10: #6CC4EC; --c11: #F29A82; --c12: #B497D3;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 64px;
+}
+.wrap { max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; gap: 40px; }
+header.top { padding-block: 48px 8px; display: flex; flex-direction: column; gap: 14px; }
+.eyebrow { font-family: var(--mono); font-size: 12.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+h1 { font-family: var(--display); font-weight: 600; font-size: clamp(34px, 5vw, 54px); line-height: 1.05; margin: 0; text-wrap: balance; }
+.lede { max-width: 68ch; color: var(--muted); font-size: 17.5px; margin: 0; }
+nav.toc { display: flex; flex-wrap: wrap; gap: 8px; }
+nav.toc a { font-family: var(--mono); font-size: 13px; color: var(--ink); text-decoration: none; border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; background: var(--panel); }
+nav.toc a:hover, nav.toc a:focus-visible { border-color: var(--accent); color: var(--accent); outline: none; }
+section.bench { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 28px; display: flex; flex-direction: column; gap: 20px; scroll-margin-top: 16px; }
+.bench-head { display: flex; flex-direction: column; gap: 6px; }
+.bench-head .num { font-family: var(--mono); font-size: 12.5px; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+h2 { font-family: var(--display); font-weight: 600; font-size: clamp(24px, 3vw, 32px); line-height: 1.15; margin: 0; text-wrap: balance; }
+.bench-head p { margin: 0; max-width: 72ch; color: var(--muted); }
+.bench-body { display: grid; grid-template-columns: 290px minmax(0, 1fr); gap: 28px; align-items: start; }
+.controls { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.ctl { display: flex; flex-direction: column; gap: 6px; }
+.ctl label, .ctl .lab { font-size: 14px; font-weight: 500; display: flex; justify-content: space-between; gap: 8px; }
+.ctl output, .val { font-family: var(--mono); font-size: 13.5px; color: var(--accent); font-variant-numeric: tabular-nums; }
+.ctl .hint { font-size: 13px; color: var(--muted); }
+input[type="range"] { width: 100%; accent-color: var(--accent); }
+.seg { display: flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.seg button { flex: 1; font: 500 13.5px var(--body); padding: 7px 8px; border: 0; background: transparent; color: var(--ink); cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); }
+.seg button:focus-visible, .btn:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.btn { font: 500 14px var(--body); padding: 8px 14px; border-radius: 8px; border: 1px solid var(--accent); background: transparent; color: var(--accent); cursor: pointer; align-self: flex-start; }
+.btn:hover { background: var(--accent-soft); }
+.check { display: flex; gap: 8px; align-items: center; font-size: 14px; }
+.check input { accent-color: var(--accent); width: 16px; height: 16px; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
+.stat { border-top: 2px solid var(--line); padding-top: 6px; display: flex; flex-direction: column; gap: 2px; }
+.stat .k { font-size: 12.5px; color: var(--muted); }
+.stat .v { font-family: var(--mono); font-size: 20px; font-variant-numeric: tabular-nums; }
+.stat.hl { border-top-color: var(--accent); }
+.figs { display: grid; gap: 16px; min-width: 0; }
+.figs.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+figure { margin: 0; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+figcaption { font-size: 13.5px; color: var(--muted); }
+canvas { width: 100%; display: block; border-radius: 8px; background: var(--panel); touch-action: pan-y; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.look { border-left: 3px solid var(--accent); padding: 4px 0 4px 14px; font-size: 15px; max-width: 80ch; }
+.look b { font-weight: 600; }
+.look p { margin: 0 0 6px; }
+.tp { font-family: var(--mono); font-size: 12.5px; color: var(--muted); }
+table.ct { border-collapse: collapse; font-family: var(--mono); font-size: 13px; font-variant-numeric: tabular-nums; }
+table.ct th, table.ct td { padding: 4px 9px; border-bottom: 1px solid var(--line); text-align: right; }
+table.ct th:first-child, table.ct td:first-child { text-align: left; }
+.ctwrap { overflow-x: auto; }
+footer { color: var(--muted); font-size: 13.5px; max-width: 80ch; }
+@media (max-width: 860px) {
+  .bench-body { grid-template-columns: minmax(0, 1fr); }
+  .figs.two { grid-template-columns: minmax(0, 1fr); }
+  section.bench { padding: 20px; }
+}
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+
+<div class="wrap">
+<header class="top">
+  <span class="eyebrow">M2 GGB · TP RNA-seq · compagnon interactif</span>
+  <h1>Bac à sable RNA-seq</h1>
+  <p class="lede">Les figures du TP, recalculées en direct dans votre navigateur. Bougez les curseurs : ACP, graphe de voisins, clustering et tests sont refaits à chaque fois sur des données simulées, construites pour reproduire le comportement des vrais jeux de données du TP.</p>
+  <nav class="toc" aria-label="Sections">
+    <a href="#dimensions">1 · Dimensions</a>
+    <a href="#bruit">2 · Bruit</a>
+    <a href="#bulk">3 · ACP et modèle</a>
+    <a href="#volcano">4 · Volcano</a>
+    <a href="#singlecell">5 · Single-cell</a>
+    <a href="#endotypes">6 · Endotypes</a>
+    <a href="#circularite">7 · Circularité</a>
+  </nav>
+</header>
+
+<!-- 1 · Dimensions -->
+<section class="bench" id="dimensions">
+  <div class="bench-head">
+    <span class="num">1 · Malédiction des dimensions</span>
+    <h2>Les distances se ressemblent toutes</h2>
+    <p>150 échantillons tirés au hasard. On mesure leur distance à un échantillon de référence, puis on regarde comment elles se répartissent quand le nombre de gènes augmente.</p>
+  </div>
+  <div class="bench-body">
+    <div class="controls">
+      <div class="ctl">
+        <label for="dimSlider">Nombre de gènes (dimensions) <output id="dimOut">2</output></label>
+        <input type="range" id="dimSlider" min="0" max="12" step="1" value="1">
+        <span class="hint">Échelle logarithmique, de 1 à 20 000.</span>
+      </div>
+      <div class="stats">
+        <div class="stat"><span class="k">Plus proche</span><span class="v" id="dMin">–</span></div>
+        <div class="stat"><span class="k">Plus lointain</span><span class="v" id="dMax">–</span></div>
+        <div class="stat hl"><span class="k">(max − min) / min</span><span class="v" id="dRatio">–</span></div>
+      </div>
+    </div>
+    <div class="figs">
+      <figure>
+        <canvas id="cvDist" height="300" aria-label="Histogramme des distances relatives à l'échantillon de référence"></canvas>
+        <figcaption>Distances divisées par la plus grande. En 2D elles s'étalent de 0 à 1 ; en haute dimension, elles s'entassent près de 1.</figcaption>
+      </figure>
+    </div>
+  </div>
+  <div class="look"><p><b>À observer :</b> à partir de quelques centaines de gènes, le plus proche voisin est presque aussi loin que le plus lointain. « Proche » perd son sens, alors que le clustering repose dessus.</p><span class="tp">Cours : diapo « Les distances se ressemblent toutes »</span></div>
+</section>
+
+<!-- 2 · Bruit -->
+<section class="bench" id="bruit">
+  <div class="bench-head">
+    <span class="num">2 · Malédiction des dimensions</span>
+    <h2>Le signal se noie dans le bruit</h2>
+    <p>40 échantillons en deux groupes, bien séparés sur 20 gènes informatifs. On ajoute des gènes qui ne portent aucun signal, puis on fait une ACP et un k-means à 2 groupes.</p>
+  </div>
+  <div class="bench-body">
+    <div class="controls">
+      <div class="ctl">
+        <label for="noiseSlider">Gènes « bruit » ajoutés <output id="noiseOut">0</output></label>
+        <input type="range" id="noiseSlider" min="0" max="10" step="1" value="0">
+      </div>
+      <button class="btn" id="noiseRedraw" type="button">Nouveau tirage</button>
+      <div class="stats">
+        <div class="stat hl"><span class="k">Groupes retrouvés (ARI)</span><span class="v" id="noiseAri">–</span></div>
+        <div class="stat"><span class="k">Variance PC1</span><span class="v" id="noisePc1">–</span></div>
+      </div>
+      <span class="hint">ARI = 1 : groupes parfaitement retrouvés ; 0 : pas mieux que le hasard.</span>
+    </div>
+    <div class="figs">
+      <figure>
+        <canvas id="cvNoise" height="320" aria-label="ACP des 40 échantillons colorés par vrai groupe"></canvas>
+        <div class="legend"><span><i style="background:var(--c1)"></i>Groupe A</span><span><i style="background:var(--c2)"></i>Groupe B</span><span>contour = groupe donné par le k-means</span></div>
+      </figure>
+    </div>
+  </div>
+  <div class="look"><p><b>À observer :</b> au-delà de quelques centaines de gènes bruit, les deux groupes se mélangent sur l'ACP et le k-means se trompe. D'où la sélection des gènes les plus variables avant toute analyse.</p><span class="tp">TP : question 1.4</span></div>
+</section>
+
+<!-- 3 · Bulk -->
+<section class="bench" id="bulk">
+  <div class="bench-head">
+    <span class="num">3 · Bulk</span>
+    <h2>L'ACP comme contrôle, le donneur dans le modèle</h2>
+    <p>Un plan comme <code>airway</code> : 4 donneurs, chacun traité et non traité, 3 000 gènes dont 300 répondent au traitement. Réglez la force des deux effets et regardez l'ACP et le nombre de gènes détectés.</p>
+  </div>
+  <div class="bench-body">
+    <div class="controls">
+      <div class="ctl">
+        <label for="dexSlider">Effet du traitement <output id="dexOut">1.5</output></label>
+        <input type="range" id="dexSlider" min="0" max="3" step="0.1" value="1.5">
+      </div>
+      <div class="ctl">
+        <label for="donSlider">Effet donneur (lot) <output id="donOut">0.5</output></label>
+        <input type="range" id="donSlider" min="0" max="3" step="0.1" value="0.5">
+      </div>
+      <div class="ctl">
+        <span class="lab">Colorer par</span>
+        <div class="seg" role="group" aria-label="Colorer par">
+          <button type="button" id="colDex" aria-pressed="true">Traitement</button>
+          <button type="button" id="colDon" aria-pressed="false">Donneur</button>
+        </div>
+      </div>
+      <button class="btn" id="bulkRedraw" type="button">Nouveau tirage</button>
+    </div>
+    <div class="figs two">
+      <figure>
+        <canvas id="cvBulkPca" height="320" aria-label="ACP des 8 échantillons"></canvas>
+        <div class="legend" id="bulkLegend"></div>
+      </figure>
+      <figure>
+        <canvas id="cvBulkBars" height="320" aria-label="Nombre de gènes détectés selon le modèle"></canvas>
+        <figcaption>Gènes à p ajustée &lt; 0,05. Tests t modérés (variance empruntée aux autres gènes, comme DESeq2) ; « ~ donneur + traitement » = test apparié. Vert foncé : vrais positifs.</figcaption>
+      </figure>
+    </div>
+  </div>
+  <div class="look"><p><b>À observer :</b> quand l'effet donneur dépasse l'effet traitement, PC1 sépare les donneurs et non les conditions. Le modèle naïf perd alors beaucoup de gènes ; le modèle qui inclut le donneur les retrouve. Sans effet donneur, les deux se valent.</p><span class="tp">TP : questions 1.3 et 1.5</span></div>
+</section>
+
+<!-- 4 · Volcano -->
+<section class="bench" id="volcano">
+  <div class="bench-head">
+    <span class="num">4 · Bulk</span>
+    <h2>Volcano plot : où placer les seuils ?</h2>
+    <p>Les résultats de l'expérience précédente. Comme les données sont simulées, on sait quels gènes répondent vraiment : on peut compter les faux positifs.</p>
+  </div>
+  <div class="bench-body">
+    <div class="controls">
+      <div class="ctl">
+        <span class="lab">Modèle</span>
+        <div class="seg" role="group" aria-label="Modèle">
+          <button type="button" id="mNaive" aria-pressed="false">~ traitement</button>
+          <button type="button" id="mPaired" aria-pressed="true">~ donneur + trait.</button>
+        </div>
+      </div>
+      <div class="ctl">
+        <label for="lfcSlider">Seuil |log2 FC| <output id="lfcOut">1.0</output></label>
+        <input type="range" id="lfcSlider" min="0" max="3" step="0.1" value="1">
+      </div>
+      <div class="ctl">
+        <label for="padjSlider">Seuil p ajustée <output id="padjOut">0.05</output></label>
+        <input type="range" id="padjSlider" min="0" max="4" step="1" value="2">
+      </div>
+      <div class="stats">
+        <div class="stat"><span class="k">Sur-exprimés</span><span class="v" id="vUp">–</span></div>
+        <div class="stat"><span class="k">Sous-exprimés</span><span class="v" id="vDown">–</span></div>
+        <div class="stat hl"><span class="k">Faux positifs</span><span class="v" id="vFp">–</span></div>
+      </div>
+    </div>
+    <div class="figs">
+      <figure>
+        <canvas id="cvVolcano" height="360" aria-label="Volcano plot"></canvas>
+        <div class="legend"><span><i style="background:var(--c2)"></i>Sur-exprimés</span><span><i style="background:var(--c1)"></i>Sous-exprimés</span><span><i style="background:var(--c7)"></i>Non retenus</span></div>
+      </figure>
+    </div>
+  </div>
+  <div class="look"><p><b>À observer :</b> avec p ajustée &lt; 0,05, la proportion de faux positifs parmi les gènes retenus reste proche de 5 % ou moins : c'est ce que garantit le FDR. Relever le seuil de fold change élimine surtout des petits effets, vrais ou non.</p><span class="tp">TP : question 1.6</span></div>
+</section>
+
+<!-- 5 · Single-cell -->
+<section class="bench" id="singlecell">
+  <div class="bench-head">
+    <span class="num">5 · Single-cell</span>
+    <h2>Graphe de voisins, clustering et UMAP</h2>
+    <p>800 cellules simulées sur le modèle de PBMC 3k (9 types), dans l'espace des 30 premières composantes. À gauche, la disposition du graphe de voisins, calculée comme une UMAP. Les clusters sont trouvés par l'algorithme de Louvain sur un graphe de voisins partagés (SNN), comme dans Seurat.</p>
+  </div>
+  <div class="bench-body">
+    <div class="controls">
+      <div class="ctl">
+        <label for="knnSlider">k voisins du graphe de clustering <output id="knnOut">20</output></label>
+        <input type="range" id="knnSlider" min="5" max="60" step="1" value="20">
+      </div>
+      <div class="ctl">
+        <label for="resSlider">Résolution <output id="resOut">0.8</output></label>
+        <input type="range" id="resSlider" min="0.1" max="2.5" step="0.1" value="0.8">
+      </div>
+      <div class="ctl">
+        <label for="nnSlider">n_neighbors de la disposition (UMAP) <output id="nnOut">15</output></label>
+        <input type="range" id="nnSlider" min="3" max="100" step="1" value="15">
+      </div>
+      <div class="ctl">
+        <span class="lab">Colorer par</span>
+        <div class="seg" role="group" aria-label="Colorer les cellules par">
+          <button type="button" id="scColClu" aria-pressed="true">Clusters</button>
+          <button type="button" id="scColType" aria-pressed="false">Vrai type</button>
+        </div>
+      </div>
+      <label class="check"><input type="checkbox" id="scEdges"> Montrer les arêtes du graphe</label>
+      <div class="stats">
+        <div class="stat hl"><span class="k">Clusters</span><span class="v" id="scNclu">–</span></div>
+        <div class="stat"><span class="k">ARI vs vrais types</span><span class="v" id="scAri">–</span></div>
+        <div class="stat"><span class="k">Modularité</span><span class="v" id="scMod">–</span></div>
+      </div>
+    </div>
+    <div class="figs">
+      <figure>
+        <canvas id="cvSc" height="460" aria-label="Disposition UMAP des cellules"></canvas>
+        <div class="legend" id="scLegend"></div>
+      </figure>
+    </div>
+  </div>
+  <div class="look"><p><b>À observer :</b> la résolution change le nombre de clusters sans bouger les cellules. n_neighbors change la carte : petit, elle se fragmente ; grand, elle se resserre. Les cellules voisines restent voisines, mais les distances entre groupes à l'écran n'ont pas de sens.</p><span class="tp">TP : exercice et question 2.4</span></div>
+</section>
+
+<!-- 6 · Endotypes -->
+<section class="bench" id="endotypes">
+  <div class="bench-head">
+    <span class="num">6 · Endotypes</span>
+    <h2>Retrouver des sous-groupes sans les connaître</h2>
+    <p>200 tumeurs simulées sur le modèle de TCGA-BRCA : Basal, Her2, Luminal A et Luminal B (ces deux derniers forment un continuum). Choisissez vos gènes, votre méthode et votre k, puis comparez aux sous-types connus.</p>
+  </div>
+  <div class="bench-body">
+    <div class="controls">
+      <div class="ctl">
+        <label for="ntopSlider">Gènes les plus variables <output id="ntopOut">500</output></label>
+        <input type="range" id="ntopSlider" min="0" max="7" step="1" value="4">
+      </div>
+      <div class="ctl">
+        <label for="kSlider">Nombre de clusters k <output id="kOut">4</output></label>
+        <input type="range" id="kSlider" min="2" max="8" step="1" value="4">
+      </div>
+      <div class="ctl">
+        <span class="lab">Méthode</span>
+        <div class="seg" role="group" aria-label="Méthode de clustering">
+          <button type="button" id="mWard" aria-pressed="true">Ward</button>
+          <button type="button" id="mKm" aria-pressed="false">k-means</button>
+        </div>
+      </div>
+      <div class="ctl">
+        <label for="centreSlider">Effet centre (lot) <output id="centreOut">0.0</output></label>
+        <input type="range" id="centreSlider" min="0" max="3" step="0.1" value="0">
+        <span class="hint">Deux hôpitaux ; 120 gènes décalés selon le centre.</span>
+      </div>
+      <div class="stats">
+        <div class="stat hl"><span class="k">ARI vs sous-types</span><span class="v" id="enAri">–</span></div>
+        <div class="stat"><span class="k">ARI vs centre</span><span class="v" id="enAriC">–</span></div>
+      </div>
+    </div>
+    <div class="figs">
+      <div class="figs two">
+        <figure>
+          <canvas id="cvEnClu" height="300" aria-label="ACP colorée par vos clusters"></canvas>
+          <figcaption>Vos clusters (ACP sur les gènes retenus)</figcaption>
+        </figure>
+        <figure>
+          <canvas id="cvEnTrue" height="300" aria-label="ACP colorée par les sous-types connus"></canvas>
+          <div class="legend"><span><i style="background:var(--c4)"></i>Basal</span><span><i style="background:var(--c6)"></i>Her2</span><span><i style="background:var(--c1)"></i>LumA</span><span><i style="background:var(--c3)"></i>LumB</span></div>
+        </figure>
+      </div>
+      <div class="ctwrap"><table class="ct" id="enTable" aria-label="Tableau croisé clusters et sous-types"></table></div>
+    </div>
+  </div>
+  <div class="look"><p><b>À observer :</b> Basal et Her2 ressortent nettement ; LumA et LumB se mélangent, car ils forment un gradient. Trop peu ou trop de gènes dégradent l'accord. Montez l'effet centre : avec peu de gènes, les clusters finissent par séparer les hôpitaux plutôt que les tumeurs.</p><span class="tp">TP : questions 3.1 et 3.2</span></div>
+</section>
+
+<!-- 7 · Circularité -->
+<section class="bench" id="circularite">
+  <div class="bench-head">
+    <span class="num">7 · Endotypes</span>
+    <h2>Le piège de la circularité</h2>
+    <p>2 000 gènes et 40 patients de bruit pur : aucun vrai groupe. On fait un k-means sur les gènes les plus variables, puis on teste tous les gènes entre les deux « clusters » obtenus.</p>
+  </div>
+  <div class="bench-body">
+    <div class="controls">
+      <div class="ctl">
+        <label for="circSlider">Gènes utilisés pour le clustering <output id="circOut">20</output></label>
+        <input type="range" id="circSlider" min="0" max="6" step="1" value="2">
+      </div>
+      <div class="ctl">
+        <span class="lab">Groupes de patients</span>
+        <div class="seg" role="group" aria-label="Origine des groupes">
+          <button type="button" id="gKm" aria-pressed="true">k-means</button>
+          <button type="button" id="gRand" aria-pressed="false">Au hasard</button>
+        </div>
+      </div>
+      <button class="btn" id="circRedraw" type="button">Nouveau tirage</button>
+      <div class="stats">
+        <div class="stat hl"><span class="k">Significatifs, gènes du clustering</span><span class="v" id="ciUsed">–</span></div>
+        <div class="stat"><span class="k">Significatifs, autres gènes</span><span class="v" id="ciOther">–</span></div>
+      </div>
+      <span class="hint">Attendu par hasard : 5 %.</span>
+    </div>
+    <div class="figs">
+      <figure>
+        <canvas id="cvCirc" height="320" aria-label="Histogramme des p-values"></canvas>
+        <div class="legend"><span><i style="background:var(--c2)"></i>Gènes qui ont servi au clustering</span><span><i style="background:var(--c7)"></i>Autres gènes</span></div>
+      </figure>
+    </div>
+  </div>
+  <div class="look"><p><b>À observer :</b> les gènes qui ont servi à créer les groupes sortent massivement « significatifs », alors qu'il n'y a aucun signal. Les autres restent à 5 %. Avec des groupes tirés au hasard, tout revient à 5 %. On ne caractérise pas des clusters avec les données qui les ont créés.</p><span class="tp">TP : question 3.3</span></div>
+</section>
+
+<footer>Toutes les données sont simulées dans le navigateur. Les algorithmes sont des versions simplifiées de ceux du TP : ACP par itération de puissance, Louvain sur graphe SNN, disposition par descente de gradient de type UMAP, Ward par Lance-Williams, tests de Welch et test t apparié avec correction de Benjamini-Hochberg.</footer>
+</div>
+
+<script>
+(() => {
+"use strict";
+/* ---------- aléatoire ---------- */
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function gauss(rand){let s=null;return function(){if(s!==null){const v=s;s=null;return v;}let u=0;while(u===0)u=rand();const v=rand();const r=Math.sqrt(-2*Math.log(u));s=r*Math.sin(2*Math.PI*v);return r*Math.cos(2*Math.PI*v);};}
+function shuffle(a,rand){for(let i=a.length-1;i>0;i--){const j=Math.floor(rand()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+/* ---------- statistiques ---------- */
+function lgamma(x){const c=[76.18009172947146,-86.50532032941677,24.01409824083091,-1.231739572450155,0.1208650973866179e-2,-0.5395239384953e-5];let y=x,t=x+5.5;t-=(x+0.5)*Math.log(t);let s=1.000000000190015;for(let j=0;j<6;j++)s+=c[j]/++y;return -t+Math.log(2.5066282746310005*s/x);}
+function betacf(a,b,x){const M=200,E=3e-12,F=1e-300;let qab=a+b,qap=a+1,qam=a-1,c=1,d=1-qab*x/qap;if(Math.abs(d)<F)d=F;d=1/d;let h=d;for(let m=1;m<=M;m++){const m2=2*m;let aa=m*(b-m)*x/((qam+m2)*(a+m2));d=1+aa*d;if(Math.abs(d)<F)d=F;c=1+aa/c;if(Math.abs(c)<F)c=F;d=1/d;h*=d*c;aa=-(a+m)*(qab+m)*x/((a+m2)*(qap+m2));d=1+aa*d;if(Math.abs(d)<F)d=F;c=1+aa/c;if(Math.abs(c)<F)c=F;d=1/d;const del=d*c;h*=del;if(Math.abs(del-1)<E)break;}return h;}
+function ibeta(x,a,b){if(x<=0)return 0;if(x>=1)return 1;const bt=Math.exp(lgamma(a+b)-lgamma(a)-lgamma(b)+a*Math.log(x)+b*Math.log(1-x));return x<(a+1)/(a+b+2)?bt*betacf(a,b,x)/a:1-bt*betacf(b,a,1-x)/b;}
+function tPval(t,df){if(!isFinite(t))return 0;return ibeta(df/(df+t*t),df/2,0.5);}
+function welch(a,b){const na=a.length,nb=b.length;let ma=0,mb=0;for(const v of a)ma+=v;for(const v of b)mb+=v;ma/=na;mb/=nb;let va=0,vb=0;for(const v of a)va+=(v-ma)**2;for(const v of b)vb+=(v-mb)**2;va/=na-1;vb/=nb-1;const se2=va/na+vb/nb;if(se2<=0)return{diff:mb-ma,p:1};const t=(mb-ma)/Math.sqrt(se2);const df=se2*se2/((va/na)**2/(na-1)+(vb/nb)**2/(nb-1));return{diff:mb-ma,p:tPval(t,df)};}
+function pairedT(d){const n=d.length;let m=0;for(const v of d)m+=v;m/=n;let s=0;for(const v of d)s+=(v-m)**2;s/=n-1;if(s<=0)return{diff:m,p:1};const t=m/Math.sqrt(s/n);return{diff:m,p:tPval(t,n-1)};}
+function bh(p){const n=p.length,o=[...p.keys()].sort((i,j)=>p[i]-p[j]),q=new Float64Array(n);let mn=1;for(let r=n-1;r>=0;r--){const i=o[r];mn=Math.min(mn,p[i]*n/(r+1));q[i]=mn;}return q;}
+function ari(a,b){const n=a.length,ka=new Map(),kb=new Map();a.forEach(v=>{if(!ka.has(v))ka.set(v,ka.size);});b.forEach(v=>{if(!kb.has(v))kb.set(v,kb.size);});const T=Array.from({length:ka.size},()=>new Float64Array(kb.size));for(let i=0;i<n;i++)T[ka.get(a[i])][kb.get(b[i])]++;const c2=x=>x*(x-1)/2;let s=0;const ra=new Float64Array(ka.size),rb=new Float64Array(kb.size);T.forEach((r,i)=>r.forEach((v,j)=>{s+=c2(v);ra[i]+=v;rb[j]+=v;}));let sa=0,sb=0;ra.forEach(v=>sa+=c2(v));rb.forEach(v=>sb+=c2(v));const e=sa*sb/c2(n),mx=(sa+sb)/2;return mx===e?0:(s-e)/(mx-e);}
+
+/* ---------- ACP via la matrice de Gram (n petit) ---------- */
+function pca(rows,m){const n=rows.length,p=rows[0].length;const mean=new Float64Array(p);for(const r of rows)for(let j=0;j<p;j++)mean[j]+=r[j];for(let j=0;j<p;j++)mean[j]/=n;const C=rows.map(r=>{const o=new Float64Array(p);for(let j=0;j<p;j++)o[j]=r[j]-mean[j];return o;});const G=new Float64Array(n*n);for(let i=0;i<n;i++)for(let k=i;k<n;k++){let s=0;const a=C[i],b=C[k];for(let j=0;j<p;j++)s+=a[j]*b[j];G[i*n+k]=s;G[k*n+i]=s;}let tr=0;for(let i=0;i<n;i++)tr+=G[i*n+i];const rand=mulberry32(7),vecs=[],vals=[];for(let c=0;c<m;c++){let v=new Float64Array(n);for(let i=0;i<n;i++)v[i]=rand()-0.5;let lam=0;for(let it=0;it<120;it++){const w=new Float64Array(n);for(let i=0;i<n;i++){let s=0;for(let k=0;k<n;k++)s+=G[i*n+k]*v[k];w[i]=s;}for(let q=0;q<vecs.length;q++){let d=0;for(let i=0;i<n;i++)d+=vecs[q][i]*v[i];for(let i=0;i<n;i++)w[i]-=vals[q]*d*vecs[q][i];}let nr=0;for(let i=0;i<n;i++)nr+=w[i]*w[i];nr=Math.sqrt(nr)||1;let dl=0;for(let i=0;i<n;i++){const nv=w[i]/nr;dl+=Math.abs(nv-v[i]);v[i]=nv;}lam=nr;if(dl<1e-9)break;}let big=0;for(let i=1;i<n;i++)if(Math.abs(v[i])>Math.abs(v[big]))big=i;if(v[big]<0)for(let i=0;i<n;i++)v[i]=-v[i];vecs.push(v);vals.push(lam);}const scores=Array.from({length:n},(_,i)=>vecs.map((v,c)=>v[i]*Math.sqrt(Math.max(vals[c],0))));return{scores,varExp:vals.map(l=>tr>0?l/tr:0)};}
+
+/* ---------- k-means, Ward ---------- */
+function d2(a,b){let s=0;for(let j=0;j<a.length;j++){const d=a[j]-b[j];s+=d*d;}return s;}
+function kmeans(P,k,rand,restarts=8){const n=P.length,p=P[0].length;let best=null,bestI=Infinity;for(let r=0;r<restarts;r++){const C=[P[Math.floor(rand()*n)].slice()];while(C.length<k){const ds=P.map(x=>Math.min(...C.map(c=>d2(x,c))));let tot=ds.reduce((a,b)=>a+b,0),u=rand()*tot,i=0;while(i<n-1&&(u-=ds[i])>0)i++;C.push(P[i].slice());}const L=new Int32Array(n);for(let it=0;it<60;it++){let ch=false;for(let i=0;i<n;i++){let bj=0,bd=Infinity;for(let j=0;j<k;j++){const d=d2(P[i],C[j]);if(d<bd){bd=d;bj=j;}}if(L[i]!==bj){L[i]=bj;ch=true;}}const S=Array.from({length:k},()=>new Float64Array(p)),N=new Int32Array(k);for(let i=0;i<n;i++){N[L[i]]++;for(let j=0;j<p;j++)S[L[i]][j]+=P[i][j];}for(let c=0;c<k;c++)if(N[c])for(let j=0;j<p;j++)C[c][j]=S[c][j]/N[c];if(!ch&&it>0)break;}let I=0;for(let i=0;i<n;i++)I+=d2(P[i],C[L[i]]);if(I<bestI){bestI=I;best=L.slice();}}return Array.from(best);}
+function ward(P,k){const n=P.length,D=new Float64Array(n*n);for(let i=0;i<n;i++)for(let j=i+1;j<n;j++){const v=d2(P[i],P[j]);D[i*n+j]=v;D[j*n+i]=v;}const size=new Int32Array(n).fill(1),act=new Uint8Array(n).fill(1),lab=Int32Array.from({length:n},(_,i)=>i);let cnt=n;while(cnt>k){let bi=-1,bj=-1,bd=Infinity;for(let i=0;i<n;i++)if(act[i])for(let j=i+1;j<n;j++)if(act[j]&&D[i*n+j]<bd){bd=D[i*n+j];bi=i;bj=j;}for(let m=0;m<n;m++)if(act[m]&&m!==bi&&m!==bj){const v=((size[bi]+size[m])*D[bi*n+m]+(size[bj]+size[m])*D[bj*n+m]-size[m]*bd)/(size[bi]+size[bj]+size[m]);D[bi*n+m]=v;D[m*n+bi]=v;}size[bi]+=size[bj];act[bj]=0;for(let i=0;i<n;i++)if(lab[i]===bj)lab[i]=bi;cnt--;}const map=new Map();return Array.from(lab,v=>{if(!map.has(v))map.set(v,map.size);return map.get(v);});}
+
+/* ---------- graphe, Louvain, disposition ---------- */
+function louvain(adj,gamma,rand){let graph=adj;const n0=adj.length;let member=Int32Array.from({length:n0},(_,i)=>i);for(let level=0;level<20;level++){const N=graph.length,k=new Float64Array(N);let m2=0;for(let i=0;i<N;i++){for(const w of graph[i].values())k[i]+=w;m2+=k[i];}if(m2===0)break;const comm=Int32Array.from({length:N},(_,i)=>i),tot=Float64Array.from(k);let improved=false,moved=true,pass=0;const order=shuffle([...Array(N).keys()],rand);while(moved&&pass<30){moved=false;pass++;for(const i of order){const ci=comm[i],nb=new Map();for(const[j,w]of graph[i]){if(j===i)continue;const c=comm[j];nb.set(c,(nb.get(c)||0)+w);}tot[ci]-=k[i];let best=ci,bg=(nb.get(ci)||0)-gamma*tot[ci]*k[i]/m2;for(const[c,w]of nb){const g=w-gamma*tot[c]*k[i]/m2;if(g>bg+1e-12){bg=g;best=c;}}tot[best]+=k[i];if(best!==ci){comm[i]=best;moved=true;improved=true;}}}if(!improved)break;const re=new Map();for(let i=0;i<N;i++)if(!re.has(comm[i]))re.set(comm[i],re.size);for(let i=0;i<N;i++)comm[i]=re.get(comm[i]);for(let i=0;i<n0;i++)member[i]=comm[member[i]];const C=re.size,na=Array.from({length:C},()=>new Map());for(let i=0;i<N;i++)for(const[j,w]of graph[i]){const a=comm[i],b=comm[j];na[a].set(b,(na[a].get(b)||0)+w);}graph=na;if(C===N)break;}return Array.from(member);}
+function modularity(adj,lab,gamma){let m2=0;const tot=new Map();let inn=0;adj.forEach((nb,i)=>{let ki=0;for(const[j,w]of nb){ki+=w;if(lab[i]===lab[j])inn+=w;}m2+=ki;tot.set(lab[i],(tot.get(lab[i])||0)+ki);});let s=0;for(const t of tot.values())s+=(t/m2)**2;return inn/m2-gamma*s;}
+
+/* ---------- dessin ---------- */
+function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim();}
+const CAT=()=>Array.from({length:12},(_,i)=>css("--c"+(i+1)));
+function setup(cv){const dpr=window.devicePixelRatio||1,w=cv.clientWidth,h=parseInt(cv.getAttribute("height"),10);if(cv.width!==Math.round(w*dpr)||cv.height!==Math.round(h*dpr)){cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);cv.style.height=h+"px";}const g=cv.getContext("2d");g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,w,h);return{g,w,h};}
+function niceTicks(a,b,n=5){const span=b-a||1,step0=span/n,mag=Math.pow(10,Math.floor(Math.log10(step0))),st=[1,2,2.5,5,10].map(x=>x*mag).find(x=>span/x<=n)||10*mag;const t=[];for(let v=Math.ceil(a/st)*st;v<=b+1e-9;v+=st)t.push(+v.toFixed(10));return t;}
+function fmt(v){if(v===0)return "0";const a=Math.abs(v);if(a>=1000)return v.toFixed(0);if(a>=10)return v.toFixed(0);if(a>=1)return v.toFixed(1).replace(/\.0$/,"");return v.toFixed(2).replace(/0$/,"");}
+function axes(g,box,xr,yr,xl,yl,opt={}){const{x,y,w,h}=box;g.strokeStyle=css("--grid");g.lineWidth=1;g.fillStyle=css("--muted");g.font="12px "+css("--mono");const X=v=>x+(v-xr[0])/(xr[1]-xr[0])*w,Y=v=>y+h-(v-yr[0])/(yr[1]-yr[0])*h;if(!opt.noXTicks){g.textAlign="center";g.textBaseline="top";for(const t of (opt.xticks||niceTicks(xr[0],xr[1]))){g.beginPath();g.moveTo(X(t),y);g.lineTo(X(t),y+h);g.stroke();g.fillText(opt.xfmt?opt.xfmt(t):fmt(t),X(t),y+h+6);}}if(!opt.noYTicks){g.textAlign="right";g.textBaseline="middle";for(const t of niceTicks(yr[0],yr[1])){g.beginPath();g.moveTo(x,Y(t));g.lineTo(x+w,Y(t));g.stroke();g.fillText(fmt(t),x-6,Y(t));}}g.strokeStyle=css("--line");g.strokeRect(x+.5,y+.5,w-1,h-1);g.fillStyle=css("--ink");g.font="13px "+css("--body");g.textAlign="center";g.textBaseline="bottom";if(xl)g.fillText(xl,x+w/2,y+h+(opt.noXTicks?22:38));if(yl){g.save();g.translate(x-(opt.noYTicks?12:44),y+h/2);g.rotate(-Math.PI/2);g.textBaseline="bottom";g.fillText(yl,0,0);g.restore();}return{X,Y};}
+function range(arr,pad=0.08){let a=Infinity,b=-Infinity;for(const v of arr){if(v<a)a=v;if(v>b)b=v;}const d=(b-a)||1;return[a-d*pad,b+d*pad];}
+function scatterBox(w,h){return{x:56,y:14,w:w-72,h:h-62};}
+
+const redrawers=[];
+function onRedraw(f){redrawers.push(f);}
+let rzT=null;window.addEventListener("resize",()=>{clearTimeout(rzT);rzT=setTimeout(()=>redrawers.forEach(f=>f()),120);});
+const mq=window.matchMedia("(prefers-color-scheme: dark)");mq.addEventListener&&mq.addEventListener("change",()=>redrawers.forEach(f=>f()));
+new MutationObserver(()=>redrawers.forEach(f=>f())).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+function seg(a,b,cb){[a,b].forEach((btn,i)=>btn.addEventListener("click",()=>{a.setAttribute("aria-pressed",i===0);b.setAttribute("aria-pressed",i===1);cb(i);}));}
+const $=id=>document.getElementById(id);
+
+/* =========== 1 · Dimensions =========== */
+(function(){const dims=[1,2,5,10,20,50,100,200,500,1000,2000,5000,20000];const n=150;let dist=null;
+function compute(){const d=dims[+$("dimSlider").value];$("dimOut").textContent=d.toLocaleString("fr-FR");const r=gauss(mulberry32(11+d));const ref=new Float64Array(d);for(let j=0;j<d;j++)ref[j]=r();dist=new Float64Array(n);for(let i=0;i<n;i++){let s=0;for(let j=0;j<d;j++){const v=r()-ref[j];s+=v*v;}dist[i]=Math.sqrt(s);}let mn=Infinity,mx=0;for(const v of dist){if(v<mn)mn=v;if(v>mx)mx=v;}$("dMin").textContent=mn.toFixed(mn<10?2:0);$("dMax").textContent=mx.toFixed(mx<10?2:0);$("dRatio").textContent=((mx-mn)/mn).toFixed(2);draw();}
+function draw(){const cv=$("cvDist"),{g,w,h}=setup(cv);let mx=0;for(const v of dist)mx=Math.max(mx,v);const bins=new Int32Array(25);for(const v of dist)bins[Math.min(24,Math.floor(v/mx*25))]++;const box={x:52,y:12,w:w-66,h:h-58};const top=Math.max(...bins);const{X,Y}=axes(g,box,[0,1],[0,top*1.1],"distance / distance maximale","échantillons");g.fillStyle=css("--c1");for(let b=0;b<25;b++){if(!bins[b])continue;const x0=X(b/25)+1,x1=X((b+1)/25)-1;g.fillRect(x0,Y(bins[b]),x1-x0,Y(0)-Y(bins[b]));}}
+$("dimSlider").addEventListener("input",compute);onRedraw(draw);compute();})();
+
+/* =========== 2 · Bruit =========== */
+(function(){const steps=[0,10,20,50,100,200,500,1000,2000,5000,10000];let seed=1,res=null;
+function compute(){const k=steps[+$("noiseSlider").value];$("noiseOut").textContent=k.toLocaleString("fr-FR");const rand=mulberry32(seed),r=gauss(rand);const n=40,lab=Array.from({length:n},(_,i)=>i<20?0:1);const rows=lab.map(l=>{const o=new Float64Array(20+k);for(let j=0;j<20;j++)o[j]=r()+(l?1.3:0);for(let j=20;j<20+k;j++)o[j]=r();return o;});const P=pca(rows,2);const km=kmeans(rows.map(x=>Array.from(x)),2,mulberry32(seed+5),5);res={sc:P.scores,lab,km};$("noiseAri").textContent=ari(lab,km).toFixed(2);$("noisePc1").textContent=(P.varExp[0]*100).toFixed(0)+" %";draw();}
+function draw(){if(!res)return;const cv=$("cvNoise"),{g,w,h}=setup(cv),box=scatterBox(w,h);const xr=range(res.sc.map(s=>s[0])),yr=range(res.sc.map(s=>s[1]));const{X,Y}=axes(g,box,xr,yr,"PC1","PC2",{noXTicks:true,noYTicks:true});const C=CAT();const flip=ari(res.lab,res.km)>=0?res.km:res.km;res.sc.forEach((s,i)=>{g.beginPath();g.arc(X(s[0]),Y(s[1]),7,0,2*Math.PI);g.fillStyle=C[res.lab[i]];g.fill();g.lineWidth=2.5;g.strokeStyle=flip[i]===flip[0]?css("--ink"):css("--panel");g.stroke();});}
+$("noiseSlider").addEventListener("input",compute);$("noiseRedraw").addEventListener("click",()=>{seed++;compute();});onRedraw(draw);compute();})();
+
+/* =========== 3-4 · Bulk + volcano =========== */
+const bulk=(function(){const G=3000,NDE=300,ND=4;let seed=3,base=null,state=null,colorBy=0,model=1;
+function gen(){const rand=mulberry32(seed),r=gauss(rand);const mu=new Float64Array(G),dexEff=new Float64Array(G),donEff=Array.from({length:ND},()=>new Float64Array(G)),noise=Array.from({length:8},()=>new Float64Array(G));for(let g=0;g<G;g++){mu[g]=6+2*r();if(g<NDE){const s=rand()<0.5?-1:1;dexEff[g]=s*(0.6+1.4*rand());}}const donGenes=new Uint8Array(G);for(let g=0;g<G;g++)donGenes[g]=rand()<0.35?1:0;for(let d=0;d<ND;d++)for(let g=0;g<G;g++)donEff[d][g]=donGenes[g]?r():0;for(let s=0;s<8;s++)for(let g=0;g<G;g++)noise[s][g]=0.45*r();base={mu,dexEff,donEff,noise};}
+function compute(){const dex=+$("dexSlider").value,don=+$("donSlider").value;$("dexOut").textContent=dex.toFixed(1);$("donOut").textContent=don.toFixed(1);const S=[];for(let d=0;d<ND;d++)for(let t=0;t<2;t++){const o=new Float64Array(G),si=d*2+t;for(let g=0;g<G;g++)o[g]=base.mu[g]+t*dex*base.dexEff[g]+don*base.donEff[d][g]+base.noise[si][g];S.push({d,t,x:o});}const P=pca(S.map(s=>s.x),2);const fc=new Float64Array(G),vn=new Float64Array(G),vp=new Float64Array(G);for(let g=0;g<G;g++){let ma=0,mb=0,md=0;const dd=[];for(let d=0;d<ND;d++){const a=S[d*2].x[g],b=S[d*2+1].x[g];ma+=a/ND;mb+=b/ND;dd.push(b-a);md+=(b-a)/ND;}let sa=0,sd=0;for(let d=0;d<ND;d++){sa+=(S[d*2].x[g]-ma)**2+(S[d*2+1].x[g]-mb)**2;sd+=(dd[d]-md)**2;}vn[g]=sa/(2*ND-2);vp[g]=sd/(ND-1);fc[g]=md;}const med=v=>{const a=Array.from(v).sort((x,y)=>x-y);return a[a.length>>1];};const d0=4,s0n=med(vn),s0p=med(vp),pn=new Float64Array(G),pp=new Float64Array(G);for(let g=0;g<G;g++){const sn=(d0*s0n+(2*ND-2)*vn[g])/(d0+2*ND-2),sp=(d0*s0p+(ND-1)*vp[g])/(d0+ND-1);pn[g]=tPval(fc[g]/Math.sqrt(sn*2/ND),d0+2*ND-2);pp[g]=tPval(fc[g]/Math.sqrt(sp/ND),d0+ND-1);}state={S,P,fc,qn:bh(pn),qp:bh(pp)};const cnt=q=>{let tp=0,fp=0;for(let g=0;g<G;g++)if(q[g]<0.05){if(g<NDE)tp++;else fp++;}return{tp,fp};};state.cn=cnt(state.qn);state.cp=cnt(state.qp);drawPca();drawBars();volcano();}
+function drawPca(){if(!state)return;const cv=$("cvBulkPca"),{g,w,h}=setup(cv),box=scatterBox(w,h),sc=state.P.scores,ev=state.P.varExp;const xr=range(sc.map(s=>s[0]),0.15),yr=range(sc.map(s=>s[1]),0.15);const{X,Y}=axes(g,box,xr,yr,`PC1 (${(ev[0]*100).toFixed(0)} %)`,`PC2 (${(ev[1]*100).toFixed(0)} %)`,{noXTicks:true,noYTicks:true});const C=CAT(),shapes=["circle","square","triangle","diamond"];state.S.forEach((s,i)=>{const px=X(sc[i][0]),py=Y(sc[i][1]),col=colorBy===0?(s.t?C[1]:C[0]):C[[2,3,4,5][s.d]];g.fillStyle=col;g.strokeStyle=css("--ink");g.lineWidth=1.2;g.beginPath();const r=9,sh=colorBy===0?shapes[s.d]:(s.t?"triangle":"circle");if(sh==="circle")g.arc(px,py,r,0,2*Math.PI);else if(sh==="square")g.rect(px-r*.85,py-r*.85,r*1.7,r*1.7);else if(sh==="triangle"){g.moveTo(px,py-r*1.1);g.lineTo(px+r,py+r*.8);g.lineTo(px-r,py+r*.8);g.closePath();}else{g.moveTo(px,py-r*1.15);g.lineTo(px+r*1.05,py);g.lineTo(px,py+r*1.15);g.lineTo(px-r*1.05,py);g.closePath();}g.fill();g.stroke();g.fillStyle=css("--muted");g.font="11.5px "+css("--mono");g.textAlign="left";g.textBaseline="middle";g.fillText("D"+(s.d+1),px+12,py);});const L=$("bulkLegend");L.innerHTML=colorBy===0?'<span><i style="background:var(--c1)"></i>Non traité</span><span><i style="background:var(--c2)"></i>Traité</span><span>forme et étiquette = donneur</span>':'<span><i style="background:var(--c3)"></i>D1</span><span><i style="background:var(--c4)"></i>D2</span><span><i style="background:var(--c5)"></i>D3</span><span><i style="background:var(--c6)"></i>D4</span><span>triangle = traité</span>';}
+function drawBars(){if(!state)return;const cv=$("cvBulkBars"),{g,w,h}=setup(cv);const box={x:56,y:14,w:w-72,h:h-70};const data=[["~ traitement",state.cn],["~ donneur + traitement",state.cp]];const top=Math.max(NDE,state.cn.tp+state.cn.fp,state.cp.tp+state.cp.fp)*1.12;const{Y}=axes(g,box,[0,1],[0,top],"","gènes détectés",{noXTicks:true});g.strokeStyle=css("--muted");g.setLineDash([5,4]);g.beginPath();g.moveTo(box.x,Y(NDE));g.lineTo(box.x+box.w,Y(NDE));g.stroke();g.setLineDash([]);g.fillStyle=css("--muted");g.font="12px "+css("--mono");g.textAlign="right";g.textBaseline="bottom";g.fillText("300 vrais gènes",box.x+box.w-6,Y(NDE)-3);const bw=box.w/5;data.forEach(([lab,c],i)=>{const x0=box.x+bw*(1+i*2);g.fillStyle=css("--c8");g.fillRect(x0,Y(c.tp),bw,Y(0)-Y(c.tp));g.fillStyle=css("--c11");g.fillRect(x0,Y(c.tp+c.fp),bw,Y(c.tp)-Y(c.tp+c.fp));g.fillStyle=css("--ink");g.font="600 15px "+css("--mono");g.textAlign="center";g.textBaseline="bottom";g.fillText(c.tp+c.fp,x0+bw/2,Y(c.tp+c.fp)-4);g.font="13px "+css("--body");g.textBaseline="top";g.fillText(lab,x0+bw/2,box.y+box.h+8);});}
+function volcano(){if(!state)return;const lfc=+$("lfcSlider").value,pt=[0.001,0.01,0.05,0.1,0.2][+$("padjSlider").value];$("lfcOut").textContent=lfc.toFixed(1);$("padjOut").textContent=pt;const q=model?state.qp:state.qn;const cv=$("cvVolcano"),{g,w,h}=setup(cv),box=scatterBox(w,h);let ymax=0;for(let i=0;i<G;i++)ymax=Math.max(ymax,-Math.log10(Math.max(q[i],1e-12)));ymax=Math.max(ymax*1.08,2);const{X,Y}=axes(g,box,[-4.5,4.5],[0,ymax],"log2 fold change (traité / non traité)","−log10(p ajustée)");let up=0,dn=0,fp=0;const C=CAT(),grey=css("--c7");g.globalAlpha=0.75;for(let i=0;i<G;i++){const yv=-Math.log10(Math.max(q[i],1e-12)),sel=q[i]<pt&&Math.abs(state.fc[i])>=lfc;let col=grey;if(sel){if(state.fc[i]>0){up++;col=C[1];}else{dn++;col=C[0];}if(i>=NDE)fp++;}g.fillStyle=col;g.beginPath();g.arc(X(Math.max(-4.4,Math.min(4.4,state.fc[i]))),Y(yv),sel?2.8:2,0,2*Math.PI);g.fill();}g.globalAlpha=1;g.strokeStyle=css("--ink");g.setLineDash([5,4]);g.beginPath();g.moveTo(box.x,Y(-Math.log10(pt)));g.lineTo(box.x+box.w,Y(-Math.log10(pt)));if(lfc>0){g.moveTo(X(lfc),box.y);g.lineTo(X(lfc),box.y+box.h);g.moveTo(X(-lfc),box.y);g.lineTo(X(-lfc),box.y+box.h);}g.stroke();g.setLineDash([]);$("vUp").textContent=up;$("vDown").textContent=dn;$("vFp").textContent=fp+(up+dn?` (${Math.round(100*fp/(up+dn))} %)`:"");}
+["dexSlider","donSlider"].forEach(id=>$(id).addEventListener("input",compute));["lfcSlider","padjSlider"].forEach(id=>$(id).addEventListener("input",volcano));
+seg($("colDex"),$("colDon"),i=>{colorBy=i;drawPca();});seg($("mNaive"),$("mPaired"),i=>{model=i;volcano();});
+$("bulkRedraw").addEventListener("click",()=>{seed++;gen();compute();});onRedraw(()=>{drawPca();drawBars();volcano();});gen();compute();})();
+
+/* =========== 5 · Single-cell =========== */
+(function(){const types=["T CD4 naïfs","T CD4 mémoire","T CD8","NK","B","Monocytes CD14+","Monocytes FCGR3A+","Cellules dendritiques","Plaquettes"];const props=[.22,.16,.13,.08,.14,.17,.05,.03,.02];const lineage=[0,0,0,0,1,2,2,2,3];const N=800,D=30;const rand=mulberry32(21),r=gauss(rand);
+const linC=Array.from({length:4},()=>Float64Array.from({length:D},(_,j)=>r()*(j<10?4.2:0)));const off=[[0,0],[1,0.9],[2,2.0],[3,2.4],[4,0],[5,0],[6,1.3],[7,2.3],[8,0]];const typC=types.map((_,t)=>Float64Array.from({length:D},(_,j)=>linC[lineage[t]][j]+(j<12?r()*off[t][1]:0)));
+const lab=[],X=[];const cum=props.map((p,i)=>props.slice(0,i+1).reduce((a,b)=>a+b,0));for(let i=0;i<N;i++){const u=rand();let t=cum.findIndex(c=>u<=c);if(t<0)t=8;lab.push(t);X.push(Float64Array.from({length:D},(_,j)=>typC[t][j]+r()*(j<12?0.85:0.6)));}
+// ordre des voisins
+const ord=[];for(let i=0;i<N;i++){const ds=new Float64Array(N);for(let j=0;j<N;j++)ds[j]=i===j?Infinity:d2(X[i],X[j]);ord.push(Int32Array.from([...Array(N).keys()].sort((a,b)=>ds[a]-ds[b]).slice(0,100)));}
+// init = 2 premières composantes
+const P=pca(X,2).scores;const rx=range(P.map(p=>p[0]),0),ry=range(P.map(p=>p[1]),0);const init=P.map(p=>[(p[0]-(rx[0]+rx[1])/2)/((rx[1]-rx[0])/2)*3,(p[1]-(ry[0]+ry[1])/2)/((ry[1]-ry[0])/2)*3]);
+let Y=init.map(p=>p.slice()),clu=new Array(N).fill(0),adj=null,colorBy=0,anim=null,edgesL=[];
+function snn(k){const nb=ord.map(o=>o.slice(0,k)),mark=new Int32Array(N).fill(-1),A=Array.from({length:N},()=>new Map());for(let i=0;i<N;i++){for(const j of nb[i])mark[j]=i;mark[i]=i;const cand=new Set(nb[i]);for(const j of cand){let inter=0;for(const q of nb[j])if(mark[q]===i)inter++;if(mark[j]===i)inter+=0;const w=inter/(2*k-inter);if(w>=1/15){A[i].set(j,Math.max(A[i].get(j)||0,w));A[j].set(i,Math.max(A[j].get(i)||0,w));}}}return A;}
+function cluster(){const k=+$("knnSlider").value,res=+$("resSlider").value;$("knnOut").textContent=k;$("resOut").textContent=res.toFixed(1);adj=snn(k);clu=louvain(adj,res,mulberry32(3));const n=new Set(clu).size;$("scNclu").textContent=n;$("scAri").textContent=ari(lab,clu).toFixed(2);$("scMod").textContent=modularity(adj,clu,res).toFixed(2);legend();draw();}
+function layout(){const nn=+$("nnSlider").value;$("nnOut").textContent=nn;const W=new Map();for(let i=0;i<N;i++){const ds=[];for(let q=0;q<nn;q++)ds.push(Math.sqrt(d2(X[i],X[ord[i][q]])));const rho=ds[0],tgt=Math.log2(nn);let lo=1e-6,hi=1e3,sg=1;for(let it=0;it<60;it++){sg=(lo+hi)/2;let f=0;for(const d of ds)f+=Math.exp(-Math.max(0,d-rho)/sg);if(f>tgt)hi=sg;else lo=sg;}for(let q=0;q<nn;q++){const j=ord[i][q],w=Math.exp(-Math.max(0,ds[q]-rho)/sg),key=i<j?i*N+j:j*N+i,o=W.get(key);W.set(key,o===undefined?w:o+w-o*w);}}const E=[];for(const[key,w]of W)E.push([Math.floor(key/N),key%N,w]);edgesL=E;Y=init.map(p=>p.slice());const a=1.58,b=0.9,EP=300,rnd=mulberry32(9);let ep=0;if(anim)cancelAnimationFrame(anim);const reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;const step=()=>{const until=reduce?EP:Math.min(EP,ep+12);for(;ep<until;ep++){const al=1-ep/EP;for(const[i,j,wt]of E){if(rnd()>wt)continue;const yi=Y[i],yj=Y[j];let dx=yi[0]-yj[0],dy=yi[1]-yj[1],dd=dx*dx+dy*dy;if(dd>0){const gc=-2*a*b*Math.pow(dd,b-1)/(1+a*Math.pow(dd,b));const gx=Math.max(-4,Math.min(4,gc*dx))*al,gy=Math.max(-4,Math.min(4,gc*dy))*al;yi[0]+=gx;yi[1]+=gy;yj[0]-=gx;yj[1]-=gy;}for(let s=0;s<5;s++){const q=Math.floor(rnd()*N);if(q===i)continue;const yq=Y[q];dx=yi[0]-yq[0];dy=yi[1]-yq[1];dd=dx*dx+dy*dy;const gc=2*b/((0.001+dd)*(1+a*Math.pow(dd,b)));const gx=Math.max(-4,Math.min(4,gc*dx))*al,gy=Math.max(-4,Math.min(4,gc*dy))*al;yi[0]+=gx;yi[1]+=gy;}}}draw();if(ep<EP)anim=requestAnimationFrame(step);else anim=null;};step();}
+function legend(){const C=CAT();if(colorBy===1){$("scLegend").innerHTML=types.map((t,i)=>`<span><i style="background:${C[i]}"></i>${t}</span>`).join("");}else{const n=new Set(clu).size;$("scLegend").innerHTML=`<span>${n} clusters de Louvain, numérotés par taille</span>`;}}
+function draw(){const cv=$("cvSc"),{g,w,h}=setup(cv),box={x:12,y:12,w:w-24,h:h-24};const xr=range(Y.map(p=>p[0]),0.04),yr=range(Y.map(p=>p[1]),0.04);const sx=box.w/(xr[1]-xr[0]),sy=box.h/(yr[1]-yr[0]),s=Math.min(sx,sy),ox=box.x+(box.w-(xr[1]-xr[0])*s)/2,oy=box.y+(box.h-(yr[1]-yr[0])*s)/2;const PX=p=>ox+(p[0]-xr[0])*s,PY=p=>oy+(p[1]-yr[0])*s;g.strokeStyle=css("--line");g.strokeRect(.5,.5,w-1,h-1);if($("scEdges").checked&&adj){g.strokeStyle=css("--muted");g.globalAlpha=0.18;g.lineWidth=0.7;g.beginPath();adj.forEach((nb,i)=>{for(const j of nb.keys())if(j>i){g.moveTo(PX(Y[i]),PY(Y[i]));g.lineTo(PX(Y[j]),PY(Y[j]));}});g.stroke();g.globalAlpha=1;}const C=CAT();const sizes=new Map();clu.forEach(c=>sizes.set(c,(sizes.get(c)||0)+1));const rank=new Map([...sizes.entries()].sort((a,b)=>b[1]-a[1]).map(([c],i)=>[c,i]));for(let i=0;i<N;i++){const ci=colorBy===1?lab[i]:rank.get(clu[i]);g.fillStyle=ci<12?C[ci]:css("--muted");g.beginPath();g.arc(PX(Y[i]),PY(Y[i]),3.2,0,2*Math.PI);g.fill();}if(colorBy===0){g.font="600 13px "+css("--mono");g.textAlign="center";g.textBaseline="middle";const cen=new Map();for(let i=0;i<N;i++){const c=rank.get(clu[i]);const e=cen.get(c)||[0,0,0];e[0]+=PX(Y[i]);e[1]+=PY(Y[i]);e[2]++;cen.set(c,e);}for(const[c,e]of cen){const x=e[0]/e[2],y=e[1]/e[2];g.lineWidth=4;g.strokeStyle=css("--panel");g.strokeText(c,x,y);g.fillStyle=css("--ink");g.fillText(c,x,y);}}}
+let cT=null;["knnSlider","resSlider"].forEach(id=>$(id).addEventListener("input",()=>{$("knnOut").textContent=$("knnSlider").value;$("resOut").textContent=(+$("resSlider").value).toFixed(1);clearTimeout(cT);cT=setTimeout(cluster,60);}));
+let lT=null;$("nnSlider").addEventListener("input",()=>{$("nnOut").textContent=$("nnSlider").value;clearTimeout(lT);lT=setTimeout(layout,80);});
+$("scEdges").addEventListener("change",draw);seg($("scColClu"),$("scColType"),i=>{colorBy=i;legend();draw();});onRedraw(draw);
+cluster();layout();})();
+
+/* =========== 6 · Endotypes =========== */
+(function(){const ntops=[50,100,200,300,500,1000,1500,2000];const G=2000,groups=[["Basal",45],["Her2",35],["LumA",70],["LumB",50]];const rand=mulberry32(33),r=gauss(rand);
+const sub=[],tval=[];groups.forEach(([nm,n],gi)=>{for(let i=0;i<n;i++){sub.push(gi);tval.push(gi===2?rand()*0.6:gi===3?0.4+rand()*0.6:0);}});const N=sub.length;const centre=Array.from({length:N},()=>rand()<0.5?0:1);
+const mod=new Int32Array(G).fill(-1);for(let g=0;g<250;g++)mod[g]=0;for(let g=250;g<400;g++)mod[g]=1;for(let g=400;g<440;g++)mod[g]=2;for(let g=440;g<640;g++)mod[g]=3;const cGenes=new Uint8Array(G);for(let g=640;g<760;g++)cGenes[g]=1;
+const load=Float64Array.from({length:G},()=>0.5+rand());const sd=Float64Array.from({length:G},(_,g)=>g>=760?0.7+0.8*rand():1);
+function modVal(i,m){const s=sub[i],t=tval[i];if(m===0)return s===0?-2:s===1?-0.6:2-0.6*t;if(m===1)return s===0?1.5:s===1?0.9:-1+1.9*t;if(m===2)return s===1?3:s===3?0.4:0;if(m===3)return s===0?2.5:0;return 0;}
+const base=[],cterm=[];for(let i=0;i<N;i++){const o=new Float64Array(G),c=new Float64Array(G);for(let g=0;g<G;g++){o[g]=(mod[g]>=0?modVal(i,mod[g])*load[g]:0)+sd[g]*r();c[g]=cGenes[g]?(centre[i]?1:-1)*load[g]*0.5:0;}base.push(o);cterm.push(c);}
+let method=0,res=null;
+function compute(){const nt=ntops[+$("ntopSlider").value],k=+$("kSlider").value,ce=+$("centreSlider").value;$("ntopOut").textContent=nt;$("kOut").textContent=k;$("centreOut").textContent=ce.toFixed(1);const X=base.map((o,i)=>{const v=new Float64Array(G);for(let g=0;g<G;g++)v[g]=o[g]+ce*cterm[i][g];return v;});const mean=new Float64Array(G),va=new Float64Array(G);for(const v of X)for(let g=0;g<G;g++)mean[g]+=v[g]/N;for(const v of X)for(let g=0;g<G;g++)va[g]+=(v[g]-mean[g])**2/(N-1);const top=[...Array(G).keys()].sort((a,b)=>va[b]-va[a]).slice(0,nt);const Z=X.map(v=>Float64Array.from(top,g=>(v[g]-mean[g])/Math.sqrt(va[g])));const P=pca(Z,10);const pcs=P.scores;const cl=method===0?ward(pcs,k):kmeans(pcs.map(p=>p.slice()),k,mulberry32(4),10);res={pcs,cl,ev:P.varExp};$("enAri").textContent=ari(sub,cl).toFixed(2);$("enAriC").textContent=ari(centre,cl).toFixed(2);table(cl,k);draw();}
+function table(cl,k){const T=Array.from({length:k},()=>[0,0,0,0]);cl.forEach((c,i)=>T[c][sub[i]]++);const order=[...Array(k).keys()].sort((a,b)=>{const ma=T[a].indexOf(Math.max(...T[a])),mb=T[b].indexOf(Math.max(...T[b]));return ma-mb;});let h="<tr><th>Cluster</th>"+groups.map(g=>`<th>${g[0]}</th>`).join("")+"<th>Total</th></tr>";order.forEach((c,i)=>{h+=`<tr><td>C${i+1}</td>`+T[c].map(v=>`<td>${v}</td>`).join("")+`<td>${T[c].reduce((a,b)=>a+b,0)}</td></tr>`;});$("enTable").innerHTML=h;res.order=order;}
+function draw(){if(!res)return;const C=CAT();const rank=new Map(res.order.map((c,i)=>[c,i]));const subCol=[C[3],C[5],C[0],C[2]];[["cvEnClu",i=>C[rank.get(res.cl[i])%12]],["cvEnTrue",i=>subCol[sub[i]]]].forEach(([id,col])=>{const cv=$(id),{g,w,h}=setup(cv),box=scatterBox(w,h);const xr=range(res.pcs.map(p=>p[0])),yr=range(res.pcs.map(p=>p[1]));const{X,Y}=axes(g,box,xr,yr,`PC1 (${(res.ev[0]*100).toFixed(0)} %)`,`PC2 (${(res.ev[1]*100).toFixed(0)} %)`,{noXTicks:true,noYTicks:true});for(let i=0;i<N;i++){g.fillStyle=col(i);g.beginPath();g.arc(X(res.pcs[i][0]),Y(res.pcs[i][1]),4.2,0,2*Math.PI);g.fill();}});}
+["ntopSlider","kSlider","centreSlider"].forEach(id=>$(id).addEventListener("input",compute));seg($("mWard"),$("mKm"),i=>{method=i;compute();});onRedraw(draw);compute();})();
+
+/* =========== 7 · Circularité =========== */
+(function(){const ns=[5,10,20,50,100,200,500];const G=2000,N=40;let seed=1,X=null,mode=0,res=null;
+function gen(){const r=gauss(mulberry32(100+seed));X=Array.from({length:G},()=>Float64Array.from({length:N},()=>r()));}
+function compute(){const nu=ns[+$("circSlider").value];$("circOut").textContent=nu;const va=X.map(row=>{let m=0;for(const v of row)m+=v/N;let s=0;for(const v of row)s+=(v-m)**2;return s;});const top=[...Array(G).keys()].sort((a,b)=>va[b]-va[a]).slice(0,nu);const used=new Uint8Array(G);top.forEach(g=>used[g]=1);let grp;if(mode===0){const P=Array.from({length:N},(_,i)=>top.map(g=>X[g][i]));grp=kmeans(P,2,mulberry32(seed+7),10);}else{const rr=mulberry32(seed+9);grp=shuffle(Array.from({length:N},(_,i)=>i<N/2?0:1),rr);}if(new Set(grp).size<2)grp[0]=1-grp[0];const p=X.map(row=>{const a=[],b=[];row.forEach((v,i)=>(grp[i]?b:a).push(v));return a.length>1&&b.length>1?welch(a,b).p:1;});let su=0,so=0;for(let g=0;g<G;g++){if(p[g]<0.05){if(used[g])su++;else so++;}}$("ciUsed").textContent=Math.round(100*su/nu)+" %";$("ciOther").textContent=(100*so/(G-nu)).toFixed(1)+" %";res={p,used,nu};draw();}
+function draw(){if(!res)return;const cv=$("cvCirc"),{g,w,h}=setup(cv),box={x:56,y:14,w:w-72,h:h-62};const B=20,hu=new Float64Array(B),ho=new Float64Array(B);for(let i=0;i<G;i++){const b=Math.min(B-1,Math.floor(res.p[i]*B));if(res.used[i])hu[b]++;else ho[b]++;}const nu=res.nu,no=G-nu;for(let b=0;b<B;b++){hu[b]/=nu;ho[b]/=no;}const top=Math.max(...hu,...ho,0.06)*1.12;const{X,Y}=axes(g,box,[0,1],[0,top],"p-value","proportion des gènes");const C=CAT(),bw=box.w/B;g.strokeStyle=css("--muted");g.setLineDash([5,4]);g.beginPath();g.moveTo(box.x,Y(1/B));g.lineTo(box.x+box.w,Y(1/B));g.stroke();g.setLineDash([]);for(let b=0;b<B;b++){const x0=X(b/B);g.fillStyle=C[6];g.fillRect(x0+bw*0.08,Y(ho[b]),bw*0.4,Y(0)-Y(ho[b]));g.fillStyle=C[1];g.fillRect(x0+bw*0.52,Y(hu[b]),bw*0.4,Y(0)-Y(hu[b]));}g.fillStyle=css("--muted");g.font="12px "+css("--mono");g.textAlign="right";g.textBaseline="bottom";g.fillText("attendu sans signal",box.x+box.w-6,Y(1/B)-3);}
+$("circSlider").addEventListener("input",compute);seg($("gKm"),$("gRand"),i=>{mode=i;compute();});$("circRedraw").addEventListener("click",()=>{seed++;gen();compute();});onRedraw(draw);gen();compute();})();
+})();
+</script>
+
+</body></html>

@@ -1,0 +1,473 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Sclérodermie en single-cell</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap">
+<style>
+/* Layout : exercice en sept étapes ; le pipeline single-cell se recalcule en cascade */
+:root {
+  --bg: #F2F4F6; --panel: #FFFFFF; --ink: #142033; --muted: #566274; --line: #D7DDE4;
+  --accent: #C25E1C; --accent-soft: #F6E3D5; --grid: #E6EAEF; --ssc: #B23A48; --ctl: #2E6FA8;
+  --c1: #2E6FA8; --c2: #D9702A; --c3: #2A9D8F; --c4: #7A5BA6; --c5: #B8901C; --c6: #C8557A;
+  --c7: #5C6B7A; --c8: #5E9E5A; --c9: #9C5B33; --c10: #3FA7D6; --c11: #E07A5F; --c12: #8D6CAB;
+  --display: "Source Serif 4", Georgia, serif;
+  --body: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0F1622; --panel: #172133; --ink: #E8EDF3; --muted: #A3AFBF; --line: #2A3850;
+    --accent: #F0954F; --accent-soft: #3A2A1F; --grid: #223047; --ssc: #E8707E; --ctl: #6FA8DA;
+    --c1: #6FA8DA; --c2: #F0954F; --c3: #4FC1B2; --c4: #A88BD1; --c5: #D8B444; --c6: #E07FA0;
+    --c7: #93A1B1; --c8: #86C281; --c9: #CC8B62; --c10: #6CC4EC; --c11: #F29A82; --c12: #B497D3;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0F1622; --panel: #172133; --ink: #E8EDF3; --muted: #A3AFBF; --line: #2A3850;
+  --accent: #F0954F; --accent-soft: #3A2A1F; --grid: #223047; --ssc: #E8707E; --ctl: #6FA8DA;
+  --c1: #6FA8DA; --c2: #F0954F; --c3: #4FC1B2; --c4: #A88BD1; --c5: #D8B444; --c6: #E07FA0;
+  --c7: #93A1B1; --c8: #86C281; --c9: #CC8B62; --c10: #6CC4EC; --c11: #F29A82; --c12: #B497D3;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 64px;
+}
+.wrap { max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; gap: 40px; }
+header.top { padding-block: 48px 8px; display: flex; flex-direction: column; gap: 14px; }
+.eyebrow { font-family: var(--mono); font-size: 12.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+h1 { font-family: var(--display); font-weight: 600; font-size: clamp(34px, 5vw, 54px); line-height: 1.05; margin: 0; text-wrap: balance; }
+.lede { max-width: 70ch; color: var(--muted); font-size: 17.5px; margin: 0 0 10px; }
+.scenario { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 28px; align-items: start; }
+nav.toc { display: flex; flex-wrap: wrap; gap: 8px; }
+nav.toc a { font-family: var(--mono); font-size: 13px; color: var(--ink); text-decoration: none; border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; background: var(--panel); }
+nav.toc a:hover, nav.toc a:focus-visible { border-color: var(--accent); color: var(--accent); outline: none; }
+section.bench { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 28px; display: flex; flex-direction: column; gap: 20px; scroll-margin-top: 16px; }
+.bench-head { display: flex; flex-direction: column; gap: 6px; }
+.bench-head .num { font-family: var(--mono); font-size: 12.5px; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+h2 { font-family: var(--display); font-weight: 600; font-size: clamp(24px, 3vw, 32px); line-height: 1.15; margin: 0; text-wrap: balance; }
+.bench-head p { margin: 0; max-width: 76ch; color: var(--muted); }
+.bench-body { display: grid; grid-template-columns: 290px minmax(0, 1fr); gap: 28px; align-items: start; }
+.controls { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.ctl { display: flex; flex-direction: column; gap: 6px; }
+.ctl label, .ctl .lab { font-size: 14px; font-weight: 500; display: flex; justify-content: space-between; gap: 8px; }
+.ctl output { font-family: var(--mono); font-size: 13.5px; color: var(--accent); font-variant-numeric: tabular-nums; }
+.hint { font-size: 13px; color: var(--muted); }
+input[type="range"] { width: 100%; accent-color: var(--accent); }
+select { font: 14px var(--body); padding: 7px 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); width: 100%; }
+.seg { display: flex; flex-wrap: wrap; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.seg button { flex: 1 1 auto; font: 500 13px var(--body); padding: 7px 6px; border: 0; background: transparent; color: var(--ink); cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); }
+.seg button:focus-visible, .btn:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.btn { font: 500 14px var(--body); padding: 8px 14px; border-radius: 8px; border: 1px solid var(--accent); background: var(--accent); color: var(--panel); cursor: pointer; align-self: flex-start; }
+.btn:hover { filter: brightness(1.08); }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
+.stat { border-top: 2px solid var(--line); padding-top: 6px; display: flex; flex-direction: column; gap: 2px; }
+.stat .k { font-size: 12.5px; color: var(--muted); }
+.stat .v { font-family: var(--mono); font-size: 20px; font-variant-numeric: tabular-nums; }
+.stat.hl { border-top-color: var(--accent); }
+.figs { display: grid; gap: 16px; min-width: 0; }
+.figs.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+figure { margin: 0; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+figcaption { font-size: 13.5px; color: var(--muted); }
+canvas { width: 100%; display: block; border-radius: 8px; background: var(--panel); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.look { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; }
+.look > div { border-left: 3px solid var(--accent); padding: 4px 0 4px 14px; font-size: 15px; }
+.look > div.ask { border-left-color: var(--ctl); }
+.look b { font-weight: 600; }
+.look p { margin: 0 0 6px; }
+table.ct { border-collapse: collapse; font-family: var(--mono); font-size: 13px; font-variant-numeric: tabular-nums; }
+table.ct th, table.ct td { padding: 4px 10px; border-bottom: 1px solid var(--line); text-align: right; }
+table.ct th:first-child, table.ct td:first-child { text-align: left; }
+table.ct th { font-weight: 500; color: var(--muted); }
+.ctwrap { overflow-x: auto; }
+.reveal { border: 1px solid var(--accent); background: var(--accent-soft); border-radius: 12px; padding: 16px 18px; font-size: 15.5px; }
+.reveal b { color: var(--accent); }
+.busy { font-family: var(--mono); font-size: 12.5px; color: var(--accent); min-height: 1.4em; }
+footer { color: var(--muted); font-size: 13.5px; max-width: 84ch; }
+footer a { color: var(--muted); }
+@media (max-width: 860px) {
+  .bench-body, .scenario { grid-template-columns: minmax(0, 1fr); }
+  .figs.two { grid-template-columns: minmax(0, 1fr); }
+  section.bench { padding: 20px; }
+}
+</style>
+
+<div class="wrap">
+<header class="top">
+  <span class="eyebrow">M2 GGB · exercice interactif · bulk contre single-cell</span>
+  <h1>Sclérodermie en single-cell</h1>
+  <div class="scenario">
+    <div>
+      <p class="lede">Biopsies cutanées de l'avant-bras chez 6 patients atteints de sclérodermie systémique (ScS) diffuse et 6 témoins. Chaque biopsie est séquencée en single-cell, ce qui permet aussi de reconstituer un « bulk » en additionnant toutes les cellules. Question : la peau des patients est-elle différente, et si oui, où ?</p>
+      <p class="hint">Données simulées : 12 biopsies, ~2 200 cellules, 231 gènes. Le scénario biologique s'inspire de Tabib et al., Nat Commun 2021 (fibroblastes progéniteurs SFRP2hi et myofibroblastes SFRP4+ dans la peau ScS).</p>
+    </div>
+    <div class="ctwrap"><table class="ct" id="designTable" aria-label="Plan de l'étude"></table></div>
+  </div>
+  <nav class="toc" aria-label="Étapes">
+    <a href="#bulk">1 · Bulk</a><a href="#qc">2 · QC</a><a href="#norm">3 · Normalisation</a><a href="#hvg">4 · HVG et ACP</a><a href="#clus">5 · Clusters</a><a href="#compo">6 · Composition</a><a href="#pb">7 · Pseudobulk</a>
+  </nav>
+</header>
+
+<!-- 1 BULK -->
+<section class="bench" id="bulk">
+  <div class="bench-head">
+    <span class="num">Étape 1 · L'approche bulk</span>
+    <h2>Toutes les cellules mélangées : que voit-on ?</h2>
+    <p>Pour chaque biopsie, on additionne les comptes de toutes les cellules (pseudo-bulk), on normalise en log CPM, puis on fait une ACP et un test patients contre témoins (6 contre 6, normalisation par médiane des rapports, test t modéré, correction de Benjamini-Hochberg).</p>
+  </div>
+  <div class="bench-body">
+    <div class="controls">
+      <div class="ctl">
+        <span class="lab">Colorer l'ACP par</span>
+        <div class="seg" role="group" aria-label="Colorer l'ACP bulk par">
+          <button type="button" id="bCond" aria-pressed="true">Statut</button>
+          <button type="button" id="bKer" aria-pressed="false">% kératinocytes</button>
+        </div>
+      </div>
+      <div class="stats">
+        <div class="stat hl"><span class="k">Gènes différentiels (padj &lt; 0,05)</span><span class="v" id="bDeg">–</span></div>
+        <div class="stat"><span class="k">R² statut sur PC1</span><span class="v" id="bR2s">–</span></div>
+        <div class="stat"><span class="k">R² % kératinocytes sur PC1</span><span class="v" id="bR2k">–</span></div>
+      </div>
+    </div>
+    <div class="figs two">
+      <figure><canvas id="cvBulkPca" height="340" aria-label="ACP des 12 biopsies"></canvas><div class="legend" id="bulkLeg"></div></figure>
+      <figure><canvas id="cvBulkVol" height="340" aria-label="Volcano plot bulk"></canvas><figcaption>Volcano plot ScS / témoins sur le bulk. Pointillés : padj = 0,05.</figcaption></figure>
+    </div>
+  </div>
+  <div class="look">
+    <div class="ask"><p><b>À vous :</b> qu'est-ce qui porte PC1 ? Conclueriez-vous qu'il n'y a pas de différence transcriptomique dans la peau ScS ?</p></div>
+    <div><p><b>À observer :</b> PC1 suit la proportion d'épiderme dans la biopsie (qui dépend de la profondeur du prélèvement), pas la maladie. Le test ne trouve rien ou presque. Gardez cette conclusion en tête jusqu'à l'étape 7.</p></div>
+  </div>
+</section>
+
+<!-- 2 QC -->
+<section class="bench" id="qc">
+  <div class="bench-head">
+    <span class="num">Étape 2 · Contrôle qualité des cellules</span>
+    <h2>Retirer cellules abîmées et doublets</h2>
+    <p>Chaque point est un code-barres cellulaire. Réglez les seuils puis appliquez : tout le pipeline des étapes suivantes est recalculé sur les cellules conservées.</p>
+  </div>
+  <div class="bench-body">
+    <div class="controls">
+      <div class="ctl"><label for="qMin">UMI minimum <output id="qMinOut">300</output></label><input type="range" id="qMin" min="0" max="2000" step="50" value="300"></div>
+      <div class="ctl"><label for="qMax">UMI maximum <output id="qMaxOut">9000</output></label><input type="range" id="qMax" min="2000" max="25000" step="250" value="9000"></div>
+      <div class="ctl"><label for="qMito">% mitochondrial maximum <output id="qMitoOut">10</output></label><input type="range" id="qMito" min="2" max="60" step="1" value="10"></div>
+      <button class="btn" id="qApply" type="button">Appliquer et recalculer</button>
+      <span class="busy" id="busy" role="status"></span>
+      <div class="stats">
+        <div class="stat hl"><span class="k">Cellules conservées</span><span class="v" id="qKept">–</span></div>
+        <div class="stat"><span class="k">Abîmées retirées</span><span class="v" id="qDam">–</span></div>
+        <div class="stat"><span class="k">Doublets retirés</span><span class="v" id="qDbl">–</span></div>
+      </div>
+    </div>
+    <div class="figs">
+      <figure><canvas id="cvQc" height="360" aria-label="UMI par cellule contre pourcentage mitochondrial"></canvas>
+      <div class="legend"><span><i style="background:var(--c3)"></i>Conservée</span><span><i style="background:var(--c2)"></i>Filtrée</span><span>contour noir = vraie cellule abîmée ou doublet (connu ici car simulé)</span></div></figure>
+    </div>
+  </div>
+  <div class="look">
+    <div class="ask"><p><b>À vous :</b> trouvez des seuils qui retirent les artefacts sans perdre trop de vraies cellules. Que se passe-t-il si le seuil d'UMI minimum est trop haut ? Quelles cellules perd-on en premier ?</p></div>
+    <div><p><b>À observer :</b> les lymphocytes T, petits, ont naturellement peu d'UMI : un seuil trop strict les fait disparaître de l'analyse et biaise la composition.</p></div>
+  </div>
+</section>
+
+<!-- 3 NORM -->
+<section class="bench" id="norm">
+  <div class="bench-head">
+    <span class="num">Étape 3 · Normalisation</span>
+    <h2>Sans normalisation, PC1 mesure la taille des cellules</h2>
+    <p>Comparez une ACP faite sur log(1 + comptes bruts) et sur log(1 + comptes par 10 000), la normalisation standard.</p>
+  </div>
+  <div class="bench-body">
+    <div class="controls">
+      <div class="ctl">
+        <span class="lab">Données</span>
+        <div class="seg" role="group" aria-label="Données">
+          <button type="button" id="nRaw" aria-pressed="true">Brutes</button>
+          <button type="button" id="nNorm" aria-pressed="false">Normalisées</button>
+        </div>
+      </div>
+      <div class="stats">
+        <div class="stat hl"><span class="k">Corrélation PC1 / log UMI</span><span class="v" id="nCor">–</span></div>
+      </div>
+    </div>
+    <div class="figs two">
+      <figure><canvas id="cvNormPc" height="320" aria-label="PC1 contre log UMI"></canvas><figcaption>PC1 de chaque cellule en fonction de son nombre d'UMI.</figcaption></figure>
+      <figure><canvas id="cvNormPca" height="320" aria-label="ACP colorée par vrai type cellulaire"></canvas><div class="legend" id="normLeg"></div></figure>
+    </div>
+  </div>
+  <div class="look">
+    <div class="ask"><p><b>À vous :</b> pourquoi le nombre d'UMI varie-t-il entre cellules d'un même type ? Est-ce de la biologie ?</p></div>
+    <div><p><b>À observer :</b> sur les données brutes, PC1 est très corrélé au nombre d'UMI (efficacité de capture, taille de la cellule). Après normalisation, cette corrélation chute et les types cellulaires se séparent.</p></div>
+  </div>
+</section>
+
+<!-- 4 HVG -->
+<section class="bench" id="hvg">
+  <div class="bench-head">
+    <span class="num">Étape 4 · Gènes variables et ACP</span>
+    <h2>Réduire avant de regrouper</h2>
+    <p>On garde les gènes plus variables qu'attendu pour leur niveau d'expression (dispersion standardisée par classe de moyenne), on les met à l'échelle, puis on fait l'ACP.</p>
+  </div>
+  <div class="bench-body">
+    <div class="controls">
+      <div class="ctl"><label for="hN">Gènes hautement variables <output id="hNOut">80</output></label><input type="range" id="hN" min="20" max="225" step="5" value="80"></div>
+      <div class="ctl"><label for="hPc">Composantes gardées <output id="hPcOut">12</output></label><input type="range" id="hPc" min="3" max="25" step="1" value="12"></div>
+      <span class="hint">Le graphe, les clusters et l'UMAP de l'étape 5 utilisent ces composantes.</span>
+    </div>
+    <div class="figs two">
+      <figure><canvas id="cvHvg" height="320" aria-label="Moyenne contre dispersion des gènes"></canvas><div class="legend"><span><i style="background:var(--c2)"></i>Gène retenu</span><span><i style="background:var(--c7)"></i>Autre</span></div></figure>
+      <figure><canvas id="cvElbow" height="320" aria-label="Variance expliquée par composante"></canvas><figcaption>Coude : variance expliquée par chaque composante ; barres pleines = composantes gardées.</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<!-- 5 CLUSTERS -->
+<section class="bench" id="clus">
+  <div class="bench-head">
+    <span class="num">Étape 5 · Graphe, clustering, UMAP, annotation</span>
+    <h2>Retrouver les populations de la peau</h2>
+    <p>Graphe de voisins partagés (SNN), clustering de Louvain, disposition UMAP, puis annotation automatique de chaque cluster par ses gènes marqueurs.</p>
+  </div>
+  <div class="bench-body">
+    <div class="controls">
+      <div class="ctl"><label for="cK">k voisins <output id="cKOut">20</output></label><input type="range" id="cK" min="5" max="50" step="1" value="20"></div>
+      <div class="ctl"><label for="cRes">Résolution <output id="cResOut">1.0</output></label><input type="range" id="cRes" min="0.2" max="2.5" step="0.1" value="1"></div>
+      <div class="ctl">
+        <span class="lab">Colorer par</span>
+        <div class="seg" role="group" aria-label="Colorer l'UMAP par">
+          <button type="button" id="uAnn" aria-pressed="true">Type</button>
+          <button type="button" id="uClu" aria-pressed="false">Cluster</button>
+          <button type="button" id="uCond" aria-pressed="false">Statut</button>
+          <button type="button" id="uMyo" aria-pressed="false">Score myofib.</button>
+        </div>
+      </div>
+      <div class="stats">
+        <div class="stat"><span class="k">Clusters</span><span class="v" id="cN">–</span></div>
+        <div class="stat hl"><span class="k">ARI vs vrais types</span><span class="v" id="cAri">–</span></div>
+      </div>
+    </div>
+    <div class="figs">
+      <figure><canvas id="cvUmap" height="460" aria-label="UMAP des cellules"></canvas><div class="legend" id="umapLeg"></div></figure>
+      <figure><canvas id="cvDot" height="330" aria-label="Dot plot des marqueurs par type annoté"></canvas><figcaption>Dot plot : taille = % de cellules exprimant le gène, couleur = expression moyenne (normalisée par gène).</figcaption></figure>
+    </div>
+  </div>
+  <div class="look">
+    <div class="ask"><p><b>À vous :</b> colorez par statut. Une région de la carte n'est-elle peuplée que de cellules de patients ? Entre quelles populations se trouve-t-elle ?</p></div>
+    <div><p><b>À observer :</b> un « pont » relie les fibroblastes SFRP2+ aux myofibroblastes SFRP4+, presque uniquement chez les patients : c'est la trajectoire de différenciation décrite dans la peau ScS. Le score myofibroblaste le montre.</p></div>
+  </div>
+</section>
+
+<!-- 6 COMPOSITION -->
+<section class="bench" id="compo">
+  <div class="bench-head">
+    <span class="num">Étape 6 · Composition</span>
+    <h2>Les proportions de chaque population, biopsie par biopsie</h2>
+    <p>Pour chaque type annoté : proportion parmi les cellules de chaque biopsie, chez les témoins et les patients.</p>
+  </div>
+  <div class="figs">
+    <figure><canvas id="cvCompo" height="340" aria-label="Proportions de chaque type par biopsie"></canvas><div class="legend"><span><i style="background:var(--ctl)"></i>Témoin</span><span><i style="background:var(--ssc)"></i>ScS</span><span>un point = une biopsie, trait = moyenne</span></div></figure>
+  </div>
+  <div class="look">
+    <div class="ask"><p><b>À vous :</b> quelles populations changent ? Leur variation est-elle visible à l'échelle de la biopsie entière ?</p></div>
+    <div><p><b>À observer :</b> les myofibroblastes passent de presque absents à quelques pourcents chez les patients. Rapporté à toute la biopsie, dominée par les kératinocytes dont la part varie du simple au double, ce changement est noyé.</p></div>
+  </div>
+</section>
+
+<!-- 7 PSEUDOBULK -->
+<section class="bench" id="pb">
+  <div class="bench-head">
+    <span class="num">Étape 7 · Pseudobulk par type cellulaire</span>
+    <h2>La même question, population par population</h2>
+    <p>Pour chaque type et chaque biopsie, on additionne les comptes des cellules de ce type, on normalise (médiane des rapports, comme DESeq2), puis on compare ScS et témoins (6 contre 6). L'unité statistique reste la biopsie.</p>
+  </div>
+  <div class="bench-body">
+    <div class="controls">
+      <div class="ctl">
+        <label for="pGene">Gène à examiner</label>
+        <select id="pGene"></select>
+      </div>
+      <div class="stats">
+        <div class="stat"><span class="k">DEG en bulk</span><span class="v" id="pBulk">–</span></div>
+        <div class="stat hl"><span class="k">DEG dans les fibroblastes SFRP2+</span><span class="v" id="pFib">–</span></div>
+      </div>
+    </div>
+    <div class="figs">
+      <figure><canvas id="cvDegBar" height="300" aria-label="Nombre de gènes différentiels par type"></canvas><figcaption>Nombre de gènes différentiels (padj &lt; 0,05) : bulk puis chaque type cellulaire.</figcaption></figure>
+      <figure><canvas id="cvStrip" height="300" aria-label="Expression du gène choisi par biopsie, bulk et par type"></canvas><div class="legend"><span><i style="background:var(--ctl)"></i>Témoin</span><span><i style="background:var(--ssc)"></i>ScS</span><span>log CPM pseudobulk ; padj affichée sous chaque panneau</span></div></figure>
+    </div>
+  </div>
+  <div class="reveal" id="reveal"></div>
+  <div class="look">
+    <div class="ask"><p><b>À vous :</b> choisissez PRSS23, THBS1 ou COMP. Pourquoi l'effet, net dans les fibroblastes SFRP2+, disparaît-il dans le bulk ?</p></div>
+    <div><p><b>À observer :</b> ces gènes sont aussi exprimés par les kératinocytes, l'endothélium ou les macrophages, qui ne changent pas. Le signal des fibroblastes (~15 % des cellules) est dilué, et la variabilité de composition entre biopsies l'écrase.</p></div>
+  </div>
+</section>
+
+<footer>Données simulées pour l'enseignement : 9 types cellulaires, comptes de Poisson, profondeur variable par cellule, cellules abîmées et doublets, effet individu. Scénario inspiré de <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8289865" target="_blank" rel="noopener">Tabib et al., Nat Commun 2021</a> ; les valeurs n'en reproduisent pas les données. Méthodes : log CP10k, gènes variables par dispersion standardisée, ACP, graphe SNN + Louvain, disposition de type UMAP, annotation par score de marqueurs, pseudobulk et test t modéré avec Benjamini-Hochberg.</footer>
+</div>
+
+<script>
+(() => {
+"use strict";
+const $=id=>document.getElementById(id);
+/* ---------- outils ---------- */
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function gauss(rand){let s=null;return function(){if(s!==null){const v=s;s=null;return v;}let u=0;while(u===0)u=rand();const v=rand();const r=Math.sqrt(-2*Math.log(u));s=r*Math.sin(2*Math.PI*v);return r*Math.cos(2*Math.PI*v);};}
+function lgamma(x){const c=[76.18009172947146,-86.50532032941677,24.01409824083091,-1.231739572450155,0.1208650973866179e-2,-0.5395239384953e-5];let y=x,t=x+5.5;t-=(x+0.5)*Math.log(t);let s=1.000000000190015;for(let j=0;j<6;j++)s+=c[j]/++y;return -t+Math.log(2.5066282746310005*s/x);}
+function betacf(a,b,x){const M=300,E=3e-12,F=1e-300;let qab=a+b,qap=a+1,qam=a-1,c=1,d=1-qab*x/qap;if(Math.abs(d)<F)d=F;d=1/d;let h=d;for(let m=1;m<=M;m++){const m2=2*m;let aa=m*(b-m)*x/((qam+m2)*(a+m2));d=1+aa*d;if(Math.abs(d)<F)d=F;c=1+aa/c;if(Math.abs(c)<F)c=F;d=1/d;h*=d*c;aa=-(a+m)*(qab+m)*x/((a+m2)*(qap+m2));d=1+aa*d;if(Math.abs(d)<F)d=F;c=1+aa/c;if(Math.abs(c)<F)c=F;d=1/d;const del=d*c;h*=del;if(Math.abs(del-1)<E)break;}return h;}
+function ibeta(x,a,b){if(x<=0)return 0;if(x>=1)return 1;const bt=Math.exp(lgamma(a+b)-lgamma(a)-lgamma(b)+a*Math.log(x)+b*Math.log(1-x));return x<(a+1)/(a+b+2)?bt*betacf(a,b,x)/a:1-bt*betacf(b,a,1-x)/b;}
+function tPval(t,df){if(!isFinite(t))return 0;return ibeta(df/(df+t*t),df/2,0.5);}
+function bh(p){const n=p.length,o=[...p.keys()].sort((i,j)=>p[i]-p[j]),q=new Float64Array(n);let mn=1;for(let r=n-1;r>=0;r--){const i=o[r];mn=Math.min(mn,p[i]*n/(r+1));q[i]=mn;}return q;}
+function ari(a,b){const n=a.length,ka=new Map(),kb=new Map();a.forEach(v=>{if(!ka.has(v))ka.set(v,ka.size);});b.forEach(v=>{if(!kb.has(v))kb.set(v,kb.size);});const T=Array.from({length:ka.size},()=>new Float64Array(kb.size));for(let i=0;i<n;i++)T[ka.get(a[i])][kb.get(b[i])]++;const c2=x=>x*(x-1)/2;let s=0;const ra=new Float64Array(ka.size),rb=new Float64Array(kb.size);T.forEach((r,i)=>r.forEach((v,j)=>{s+=c2(v);ra[i]+=v;rb[j]+=v;}));let sa=0,sb=0;ra.forEach(v=>sa+=c2(v));rb.forEach(v=>sb+=c2(v));const e=sa*sb/c2(n),mx=(sa+sb)/2;return mx===e?0:(s-e)/(mx-e);}
+function r2(v,lab){const n=v.length;let m=0;for(const x of v)m+=x/n;const S=new Map();v.forEach((x,i)=>{const e=S.get(lab[i])||[0,0];e[0]+=x;e[1]++;S.set(lab[i],e);});let b=0,t=0;for(const[,e]of S)b+=e[1]*(e[0]/e[1]-m)**2;for(const x of v)t+=(x-m)**2;return t>0?b/t:0;}
+function corr(a,b){const n=a.length;let ma=0,mb=0;for(let i=0;i<n;i++){ma+=a[i]/n;mb+=b[i]/n;}let sab=0,sa=0,sb=0;for(let i=0;i<n;i++){sab+=(a[i]-ma)*(b[i]-mb);sa+=(a[i]-ma)**2;sb+=(b[i]-mb)**2;}return sab/Math.sqrt(sa*sb||1);}
+// ACP dans l'espace des gènes (p petit) : rows n × p
+function pcaG(rows,m){const n=rows.length,p=rows[0].length,mean=new Float64Array(p);for(const r of rows)for(let j=0;j<p;j++)mean[j]+=r[j]/n;const C=new Float64Array(p*p);const tmp=new Float64Array(p);for(const r of rows){for(let j=0;j<p;j++)tmp[j]=r[j]-mean[j];for(let a=0;a<p;a++){const va=tmp[a];if(va===0)continue;const off=a*p;for(let b=a;b<p;b++)C[off+b]+=va*tmp[b];}}for(let a=0;a<p;a++)for(let b=a+1;b<p;b++)C[b*p+a]=C[a*p+b];let tr=0;for(let a=0;a<p;a++)tr+=C[a*p+a];m=Math.min(m,p);const rand=mulberry32(3),vecs=[],vals=[];for(let c=0;c<m;c++){const v=new Float64Array(p);for(let j=0;j<p;j++)v[j]=rand()-0.5;let lam=0;for(let it=0;it<200;it++){const w=new Float64Array(p);for(let a=0;a<p;a++){let s=0;const off=a*p;for(let b=0;b<p;b++)s+=C[off+b]*v[b];w[a]=s;}for(let q=0;q<vecs.length;q++){let d=0;for(let j=0;j<p;j++)d+=vecs[q][j]*v[j];for(let j=0;j<p;j++)w[j]-=vals[q]*d*vecs[q][j];}let nr=0;for(let j=0;j<p;j++)nr+=w[j]*w[j];nr=Math.sqrt(nr)||1;let dl=0;for(let j=0;j<p;j++){const nv=w[j]/nr;dl+=Math.abs(nv-v[j]);v[j]=nv;}lam=nr;if(dl<1e-6)break;}let big=0;for(let j=1;j<p;j++)if(Math.abs(v[j])>Math.abs(v[big]))big=j;if(v[big]<0)for(let j=0;j<p;j++)v[j]=-v[j];vecs.push(v);vals.push(lam);}const scores=rows.map(r=>vecs.map(v=>{let s=0;for(let j=0;j<p;j++)s+=(r[j]-mean[j])*v[j];return s;}));return{scores,varExp:vals.map(l=>tr>0?l/tr:0)};}
+function d2(a,b,m){let s=0;for(let j=0;j<m;j++){const d=a[j]-b[j];s+=d*d;}return s;}
+function shuffle(a,rand){for(let i=a.length-1;i>0;i--){const j=Math.floor(rand()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function louvain(adj,gamma,rand){let graph=adj;const n0=adj.length;let member=Int32Array.from({length:n0},(_,i)=>i);for(let level=0;level<20;level++){const N=graph.length,k=new Float64Array(N);let m2=0;for(let i=0;i<N;i++){for(const w of graph[i].values())k[i]+=w;m2+=k[i];}if(m2===0)break;const comm=Int32Array.from({length:N},(_,i)=>i),tot=Float64Array.from(k);let improved=false,moved=true,pass=0;const order=shuffle([...Array(N).keys()],rand);while(moved&&pass<30){moved=false;pass++;for(const i of order){const ci=comm[i],nb=new Map();for(const[j,w]of graph[i]){if(j===i)continue;const c=comm[j];nb.set(c,(nb.get(c)||0)+w);}tot[ci]-=k[i];let best=ci,bg=(nb.get(ci)||0)-gamma*tot[ci]*k[i]/m2;for(const[c,w]of nb){const g=w-gamma*tot[c]*k[i]/m2;if(g>bg+1e-12){bg=g;best=c;}}tot[best]+=k[i];if(best!==ci){comm[i]=best;moved=true;improved=true;}}}if(!improved)break;const re=new Map();for(let i=0;i<N;i++)if(!re.has(comm[i]))re.set(comm[i],re.size);for(let i=0;i<N;i++)comm[i]=re.get(comm[i]);for(let i=0;i<n0;i++)member[i]=comm[member[i]];const C=re.size,na=Array.from({length:C},()=>new Map());for(let i=0;i<N;i++)for(const[j,w]of graph[i]){const a=comm[i],b=comm[j];na[a].set(b,(na[a].get(b)||0)+w);}graph=na;if(C===N)break;}return Array.from(member);}
+function medNorm(R){const G=R[0].length,ok=[];for(let g=0;g<G;g++){let m=Infinity;for(const r of R)m=Math.min(m,r[g]);if(m>2)ok.push(g);}const ref=Float64Array.from(ok,g=>R.reduce((a,r)=>a+r[g],0)/R.length);return R.map(r=>{const d=ok.map((g,j)=>r[g]-ref[j]).sort((x,y)=>x-y);const off=d.length?d[d.length>>1]:0;return Float64Array.from(r,v=>v-off);});}
+function modT(A0,B0){const NR=medNorm(A0.concat(B0)),A=NR.slice(0,A0.length),B=NR.slice(A0.length);// A,B : tableaux d'échantillons × gènes (log), retourne lfc, p par gène, variance modérée
+const G=A[0].length,na=A.length,nb=B.length,df=na+nb-2,lfc=new Float64Array(G),s2=new Float64Array(G);for(let g=0;g<G;g++){let ma=0,mb=0;for(const r of A)ma+=r[g]/na;for(const r of B)mb+=r[g]/nb;let ss=0;for(const r of A)ss+=(r[g]-ma)**2;for(const r of B)ss+=(r[g]-mb)**2;s2[g]=ss/df;lfc[g]=mb-ma;}const srt=Array.from(s2).sort((a,b)=>a-b),s0=srt[srt.length>>1],d0=4,p=new Float64Array(G);for(let g=0;g<G;g++){const sp=(d0*s0+df*s2[g])/(d0+df);p[g]=tPval(lfc[g]/Math.sqrt(sp*(1/na+1/nb)),df+d0);}return{lfc,p,q:bh(p)};}
+/* ---------- dessin ---------- */
+function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim();}
+const CAT=()=>Array.from({length:12},(_,i)=>css("--c"+(i+1)));
+function hex(c){const m=c.replace("#","");return[parseInt(m.slice(0,2),16),parseInt(m.slice(2,4),16),parseInt(m.slice(4,6),16)];}
+function setup(cv){const dpr=window.devicePixelRatio||1,w=cv.clientWidth,h=parseInt(cv.getAttribute("height"),10);if(cv.width!==Math.round(w*dpr)||cv.height!==Math.round(h*dpr)){cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);cv.style.height=h+"px";}const g=cv.getContext("2d");g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,w,h);return{g,w,h};}
+function niceTicks(a,b,n=5){const span=b-a||1,step0=span/n,mag=Math.pow(10,Math.floor(Math.log10(step0))),st=[1,2,2.5,5,10].map(x=>x*mag).find(x=>span/x<=n)||10*mag;const t=[];for(let v=Math.ceil(a/st)*st;v<=b+1e-9;v+=st)t.push(+v.toFixed(10));return t;}
+function fmt(v){if(v===0)return"0";const a=Math.abs(v);if(a>=10)return v.toFixed(0);if(a>=1)return v.toFixed(1).replace(/\.0$/,"");return v.toFixed(2).replace(/0$/,"");}
+function axes(g,box,xr,yr,xl,yl,opt={}){const{x,y,w,h}=box;g.strokeStyle=css("--grid");g.lineWidth=1;g.fillStyle=css("--muted");g.font="12px "+css("--mono");const X=v=>x+(v-xr[0])/(xr[1]-xr[0])*w,Y=v=>y+h-(v-yr[0])/(yr[1]-yr[0])*h;if(!opt.noXTicks){g.textAlign="center";g.textBaseline="top";for(const t of niceTicks(xr[0],xr[1])){g.beginPath();g.moveTo(X(t),y);g.lineTo(X(t),y+h);g.stroke();g.fillText(opt.xfmt?opt.xfmt(t):fmt(t),X(t),y+h+6);}}if(!opt.noYTicks){g.textAlign="right";g.textBaseline="middle";for(const t of niceTicks(yr[0],yr[1])){g.beginPath();g.moveTo(x,Y(t));g.lineTo(x+w,Y(t));g.stroke();g.fillText(opt.yfmt?opt.yfmt(t):fmt(t),x-6,Y(t));}}g.strokeStyle=css("--line");g.strokeRect(x+.5,y+.5,w-1,h-1);g.fillStyle=css("--ink");g.font="13px "+css("--body");g.textAlign="center";g.textBaseline="bottom";if(xl)g.fillText(xl,x+w/2,y+h+(opt.noXTicks?22:38));if(yl){g.save();g.translate(x-(opt.noYTicks?12:44),y+h/2);g.rotate(-Math.PI/2);g.textBaseline="bottom";g.fillText(yl,0,0);g.restore();}return{X,Y};}
+function range(arr,pad=0.08){let a=Infinity,b=-Infinity;for(const v of arr){if(v<a)a=v;if(v>b)b=v;}const d=(b-a)||1;return[a-d*pad,b+d*pad];}
+const redraw=[];let rz=null;window.addEventListener("resize",()=>{clearTimeout(rz);rz=setTimeout(()=>redraw.forEach(f=>f()),120);});
+const mq=window.matchMedia("(prefers-color-scheme: dark)");mq.addEventListener&&mq.addEventListener("change",()=>redraw.forEach(f=>f()));
+new MutationObserver(()=>redraw.forEach(f=>f())).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+function seg(btns,cb){btns.forEach((b,i)=>b.addEventListener("click",()=>{btns.forEach((x,j)=>x.setAttribute("aria-pressed",i===j));cb(i);}));}
+
+/* ---------- simulation ---------- */
+const TYPES=["Kératinocytes","Fibroblastes SFRP2+","Fibroblastes FMO1+","Myofibroblastes","Endothéliales","Péricytes","Macrophages","Lymphocytes T","Mélanocytes"];
+const SHORT=["Kérat.","Fib SFRP2+","Fib FMO1+","Myofib.","Endoth.","Péric.","Macro.","LT","Mélano."];
+const MARK=[["KRT14","KRT5","KRT10"],["SFRP2","DPP4","PI16"],["FMO1","MYOC","LSP1"],["SFRP4","COL10A1","FNDC1"],["PECAM1","VWF","CDH5"],["RGS5","MYH11","ACTA2"],["CD68","C1QA","CD163"],["CD3E","IL7R","CD2"],["PMEL","MLANA","TYRP1"]];
+const PROG=["PRSS23","THBS1","TNC","COMP","CCN2","CCL2","ADAM12","CDH11","THY1","POSTN","SERPINE1","LOX","FN1","TIMP1","COL1A1"];
+const MYOX=["MATN3"];const MITO=["MT-CO1","MT-CO2","MT-ND1","MT-ND4","MT-ATP6","MT-CYB"];const NBG=180;
+const GENES=[...MARK.flat(),...PROG,...MYOX,...MITO,...Array.from({length:NBG},(_,i)=>"G"+String(i+1).padStart(3,"0"))];
+const G=GENES.length,gi=Object.fromEntries(GENES.map((g,i)=>[g,i])),isMito=GENES.map(g=>g.startsWith("MT-"));
+const rand=mulberry32(2026),r=gauss(rand);
+// profils log-moyens par type
+const LM=TYPES.map(()=>new Float64Array(G));
+for(let g=0;g<G;g++){const nm=GENES[g];if(isMito[g])continue;let base;if(g>=G-NBG){base=-1+1.2*r();for(let t=0;t<TYPES.length;t++)LM[t][g]=base+0.6*r();}else{for(let t=0;t<TYPES.length;t++)LM[t][g]=-3+0.3*r();}}
+MARK.forEach((ms,t)=>ms.forEach(m=>{LM[t][gi[m]]=2.6+0.4*r();}));
+LM[3][gi.ACTA2]=2.8;LM[1][gi.SFRP4]=-0.5;LM[3][gi.SFRP2]=1.6;LM[3][gi.DPP4]=0.4;
+const progLevel={0:1.5,1:1.7,2:1.2,3:2.6,4:1.4,5:0.8,6:1.3};
+for(const p of PROG){const g=gi[p];for(let t=0;t<TYPES.length;t++)LM[t][g]=(progLevel[t]!==undefined?progLevel[t]:-1.5)+0.5*r();}
+LM[4][gi.THBS1]+=1.0;LM[4][gi.SERPINE1]+=0.8;LM[6][gi.CCL2]+=1.2;LM[6][gi.TIMP1]+=0.8;LM[0][gi.TIMP1]+=0.6;LM[0][gi.PRSS23]+=0.5;LM[0][gi.FN1]+=0.4;
+LM[3][gi.MATN3]=1.8;LM[1][gi.MATN3]=-1;
+const LIBMULT=[0.9,1.25,1.15,1.4,1.0,1.0,1.1,0.45,0.9];
+// échantillons
+const SAMPLES=[];for(let i=0;i<12;i++)SAMPLES.push({id:(i<6?"T":"S")+((i%6)+1),ssc:i>=6?1:0});
+const CTRLP=[0,0.14,0.085,0.004,0.11,0.07,0.06,0.05,0.04],SSCP=[0,0.15,0.05,0.045,0.11,0.07,0.065,0.07,0.04];
+const indiv=SAMPLES.map(()=>Float64Array.from({length:G},()=>0.22*r()));
+const PERS=180;
+function poisson(l){if(l<30){const L=Math.exp(-l);let k=0,p=1;do{k++;p*=rand();}while(p>L);return k-1;}return Math.max(0,Math.round(l+Math.sqrt(l)*r()));}
+function profile(t,s,actv,traj){const lm=new Float64Array(G);for(let g=0;g<G;g++){let v;if(traj>0){v=(1-traj)*LM[1][g]+traj*LM[3][g];}else v=LM[t][g];v+=indiv[s][g];lm[g]=v;}if(actv>0)for(const p of PROG)lm[gi[p]]+=actv;return lm;}
+const CELLS=[];
+const KF=[0.22,0.64,0.4,0.74,0.3,0.55,0.6,0.25,0.72,0.38,0.5,0.28];
+SAMPLES.forEach((S,s)=>{const kf=KF[s];S.kf=kf;const P=(S.ssc?SSCP:CTRLP).slice();const rest=P.reduce((a,b)=>a+b,0);for(let t=1;t<P.length;t++)P[t]*=(1-kf)/rest;P[0]=kf;const cum=[];P.reduce((a,b,i)=>(cum[i]=a+b),0);
+for(let c=0;c<PERS;c++){const u=rand();let t=cum.findIndex(x=>u<=x);if(t<0)t=0;let traj=0,actv=0;if(t===3)traj=S.ssc?0.45+0.55*rand():0.8+0.2*rand();if(S.ssc&&t===1){actv=1.2*(0.5+0.8*rand());if(rand()<0.1){traj=0.1+0.35*rand();}}
+const dam=rand()<0.06,dbl=!dam&&rand()<0.035;let L=Math.exp(Math.log(2200*LIBMULT[t])+0.75*r());if(dam)L*=0.3;const lm=profile(t,s,actv,traj);let mx=-Infinity;for(let g=0;g<G;g++)if(!isMito[g]&&lm[g]>mx)mx=lm[g];let Z=0;const w=new Float64Array(G);for(let g=0;g<G;g++)if(!isMito[g]){w[g]=Math.exp(lm[g]-mx);Z+=w[g];}
+const fm=dam?0.15+0.4*rand():0.02+0.035*rand();const cnt=new Float32Array(G);for(let g=0;g<G;g++){if(isMito[g])cnt[g]=poisson(L*fm/MITO.length);else cnt[g]=poisson(L*(1-fm)*w[g]/Z);}
+let type=t;if(dbl){const t2=(t+1+Math.floor(rand()*8))%9;const lm2=profile(t2,s,0,0);let mx2=-Infinity;for(let g=0;g<G;g++)if(!isMito[g]&&lm2[g]>mx2)mx2=lm2[g];let Z2=0;const w2=new Float64Array(G);for(let g=0;g<G;g++)if(!isMito[g]){w2[g]=Math.exp(lm2[g]-mx2);Z2+=w2[g];}const L2=Math.exp(Math.log(2200*LIBMULT[t2])+0.75*r());for(let g=0;g<G;g++)if(!isMito[g])cnt[g]+=poisson(L2*(1-fm)*w2[g]/Z2);}
+let tot=0,mt=0;for(let g=0;g<G;g++){tot+=cnt[g];if(isMito[g])mt+=cnt[g];}CELLS.push({s,ssc:S.ssc,type,traj,actv,dam,dbl,cnt,umi:tot,mito:100*mt/Math.max(1,tot)});}});
+const NCELL=CELLS.length;
+
+/* ---------- plan ---------- */
+(function(){const n=t=>CELLS.filter(c=>c.ssc===t).length;$("designTable").innerHTML=`<tr><th>Groupe</th><th>Biopsies</th><th>Cellules</th></tr><tr><td><i style="display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--ctl);margin-right:7px"></i>Témoins</td><td>6</td><td>${n(0)}</td></tr><tr><td><i style="display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--ssc);margin-right:7px"></i>ScS diffuse</td><td>6</td><td>${n(1)}</td></tr><tr><td><b>Total</b></td><td><b>12</b></td><td><b>${NCELL}</b></td></tr>`;})();
+
+/* ---------- pseudobulk ---------- */
+function logcpm(sum){let tot=0;for(let g=0;g<G;g++)if(!isMito[g])tot+=sum[g];const o=new Float64Array(G);for(let g=0;g<G;g++)o[g]=Math.log2(1e6*sum[g]/Math.max(1,tot)+1);return o;}
+const NONMITO=[...Array(G).keys()].filter(g=>!isMito[g]);
+function sub(rows){return rows.map(r=>Float64Array.from(NONMITO,g=>r[g]));}
+
+/* ---------- Étape 1 : bulk ---------- */
+const BULK=(function(){const sums=SAMPLES.map(()=>new Float64Array(G));CELLS.forEach(c=>{for(let g=0;g<G;g++)sums[c.s][g]+=c.cnt[g];});const lc=sums.map(logcpm);const keratFrac=SAMPLES.map((S,s)=>{const cs=CELLS.filter(c=>c.s===s);return cs.filter(c=>c.type===0).length/cs.length;});
+const P=pcaG(sub(medNorm(lc)),2);const A=sub(lc.filter((_,s)=>!SAMPLES[s].ssc)),B=sub(lc.filter((_,s)=>SAMPLES[s].ssc));const T=modT(A,B);let colorBy=0;
+const nde=Array.from(T.q).filter(q=>q<0.05).length;$("bDeg").textContent=nde;$("bR2s").textContent=r2(P.scores.map(s=>s[0]),SAMPLES.map(s=>s.ssc)).toFixed(2);$("bR2k").textContent=(corr(P.scores.map(s=>s[0]),keratFrac)**2).toFixed(2);
+function draw(){const C=CAT(),cv=$("cvBulkPca"),{g,w,h}=setup(cv),box={x:44,y:12,w:w-58,h:h-56};const xr=range(P.scores.map(s=>s[0]),0.15),yr=range(P.scores.map(s=>s[1]),0.15);const{X,Y}=axes(g,box,xr,yr,`PC1 (${(P.varExp[0]*100).toFixed(0)} %)`,`PC2 (${(P.varExp[1]*100).toFixed(0)} %)`,{noXTicks:true,noYTicks:true});const kr=range(keratFrac,0),lo=hex(css("--c1")),hi=hex(css("--c2"));SAMPLES.forEach((S,s)=>{let col;if(colorBy===0)col=S.ssc?css("--ssc"):css("--ctl");else{const u=(keratFrac[s]-kr[0])/(kr[1]-kr[0]||1);col=`rgb(${lo.map((v,j)=>Math.round(v+(hi[j]-v)*u))})`;}g.fillStyle=col;g.beginPath();g.arc(X(P.scores[s][0]),Y(P.scores[s][1]),9,0,2*Math.PI);g.fill();g.fillStyle=css("--ink");g.font="12px "+css("--mono");g.textAlign="left";g.textBaseline="middle";g.fillText(S.id+(colorBy===1?` ${Math.round(keratFrac[s]*100)} %`:""),X(P.scores[s][0])+12,Y(P.scores[s][1]));});$("bulkLeg").innerHTML=colorBy===0?'<span><i style="background:var(--ctl)"></i>Témoin (T)</span><span><i style="background:var(--ssc)"></i>ScS (S)</span>':'<span><i style="background:var(--c1)"></i>peu d\'épiderme</span><span><i style="background:var(--c2)"></i>beaucoup d\'épiderme</span>';
+const cv2=$("cvBulkVol"),o=setup(cv2),b2={x:52,y:12,w:o.w-66,h:o.h-56};const ys=Array.from(T.q,q=>-Math.log10(Math.max(q,1e-300))),xs=Array.from(T.lfc);const ymax=Math.max(2,...ys)*1.1;const{X:X2,Y:Y2}=axes(o.g,b2,[-3,3],[0,ymax],"log2 FC (ScS / témoins)","−log10(p ajustée)");NONMITO.forEach((g0,j)=>{const nm=GENES[g0],prog=PROG.includes(nm);o.g.fillStyle=prog?C[1]:C[6];o.g.globalAlpha=prog?0.95:0.5;o.g.beginPath();o.g.arc(X2(Math.max(-2.9,Math.min(2.9,xs[j]))),Y2(ys[j]),prog?4:2.6,0,2*Math.PI);o.g.fill();});o.g.globalAlpha=1;o.g.strokeStyle=css("--ink");o.g.setLineDash([5,4]);o.g.beginPath();o.g.moveTo(b2.x,Y2(-Math.log10(0.05)));o.g.lineTo(b2.x+b2.w,Y2(-Math.log10(0.05)));o.g.stroke();o.g.setLineDash([]);o.g.fillStyle=C[1];o.g.font="12px "+css("--body");o.g.textAlign="left";o.g.textBaseline="top";o.g.fillText("● programme fibrosant",b2.x+8,b2.y+6);}
+seg([$("bCond"),$("bKer")],i=>{colorBy=i;draw();});redraw.push(draw);draw();return{lc,T,nde};})();
+
+/* ---------- Étape 2 : QC (graphique) ---------- */
+function qcThresholds(){return{min:+$("qMin").value,max:+$("qMax").value,mito:+$("qMito").value};}
+function passQC(c,t){return c.umi>=t.min&&c.umi<=t.max&&c.mito<=t.mito;}
+function drawQC(){const t=qcThresholds();$("qMinOut").textContent=t.min;$("qMaxOut").textContent=t.max;$("qMitoOut").textContent=t.mito;const C=CAT(),cv=$("cvQc"),{g,w,h}=setup(cv),box={x:52,y:12,w:w-66,h:h-56};const lx=CELLS.map(c=>Math.log10(Math.max(1,c.umi)));const xr=[Math.min(...lx)-0.05,Math.max(...lx)+0.05],yr=[0,Math.max(...CELLS.map(c=>c.mito))*1.05];const{X,Y}=axes(g,box,xr,yr,"UMI par cellule (log10)","% mitochondrial",{xfmt:v=>Math.round(10**v).toLocaleString("fr-FR")});let kept=0,dam=0,dbl=0;CELLS.forEach((c,i)=>{const ok=passQC(c,t);if(ok)kept++;else{if(c.dam)dam++;if(c.dbl)dbl++;}g.globalAlpha=ok?0.5:0.85;g.fillStyle=ok?C[2]:C[1];g.beginPath();g.arc(X(lx[i]),Y(c.mito),c.dam||c.dbl?3.4:2.4,0,2*Math.PI);g.fill();if(c.dam||c.dbl){g.globalAlpha=1;g.strokeStyle=css("--ink");g.lineWidth=0.9;g.stroke();}});g.globalAlpha=1;g.strokeStyle=css("--ink");g.setLineDash([5,4]);g.beginPath();if(t.min>0){g.moveTo(X(Math.log10(t.min)),box.y);g.lineTo(X(Math.log10(t.min)),box.y+box.h);}g.moveTo(X(Math.log10(t.max)),box.y);g.lineTo(X(Math.log10(t.max)),box.y+box.h);g.moveTo(box.x,Y(t.mito));g.lineTo(box.x+box.w,Y(t.mito));g.stroke();g.setLineDash([]);const totDam=CELLS.filter(c=>c.dam).length,totDbl=CELLS.filter(c=>c.dbl).length;$("qKept").textContent=kept+" / "+NCELL;$("qDam").textContent=dam+" / "+totDam;$("qDbl").textContent=dbl+" / "+totDbl;}
+["qMin","qMax","qMito"].forEach(id=>$(id).addEventListener("input",drawQC));redraw.push(drawQC);
+
+/* ---------- pipeline single-cell ---------- */
+const S={};
+function runQC(){const t=qcThresholds();S.idx=CELLS.map((c,i)=>passQC(c,t)?i:-1).filter(i=>i>=0);const n=S.idx.length;S.lnorm=S.idx.map(i=>{const c=CELLS[i],o=new Float32Array(G);for(let g=0;g<G;g++)o[g]=Math.log1p(1e4*c.cnt[g]/c.umi);return o;});S.lraw=S.idx.map(i=>Float32Array.from(CELLS[i].cnt,v=>Math.log1p(v)));S.lumi=S.idx.map(i=>Math.log10(CELLS[i].umi));
+// étape 3 : ACP brute et normalisée sur les gènes non mito
+S.pRaw=pcaG(S.lraw.map(r=>Float64Array.from(NONMITO,g=>r[g])),2);S.pNorm=pcaG(S.lnorm.map(r=>Float64Array.from(NONMITO,g=>r[g])),2);
+// statistiques de dispersion pour les HVG
+const mean=new Float64Array(G),vr=new Float64Array(G);for(const r of S.lnorm)for(let g=0;g<G;g++)mean[g]+=r[g]/n;for(const r of S.lnorm)for(let g=0;g<G;g++)vr[g]+=(r[g]-mean[g])**2/(n-1);const disp=Float64Array.from(vr,(v,g)=>Math.log((v+1e-9)/(mean[g]+1e-9)));const cand=NONMITO.filter(g=>mean[g]>0.01);const sorted=cand.slice().sort((a,b)=>mean[a]-mean[b]);const nb=10,z=new Float64Array(G).fill(-Infinity);for(let b=0;b<nb;b++){const part=sorted.slice(Math.floor(b*sorted.length/nb),Math.floor((b+1)*sorted.length/nb));const m=part.reduce((a,g)=>a+disp[g],0)/part.length;const sd=Math.sqrt(part.reduce((a,g)=>a+(disp[g]-m)**2,0)/Math.max(1,part.length-1))||1;part.forEach(g=>z[g]=(disp[g]-m)/sd);}S.mean=mean;S.disp=disp;S.hvgOrder=cand.slice().sort((a,b)=>z[b]-z[a]);}
+function runPCA(){const nh=+$("hN").value;$("hNOut").textContent=nh;S.hvg=S.hvgOrder.slice(0,Math.min(nh,S.hvgOrder.length));const n=S.lnorm.length;const Z=S.lnorm.map(r=>Float64Array.from(S.hvg,g=>r[g]));for(let j=0;j<S.hvg.length;j++){let m=0;for(const z of Z)m+=z[j]/n;let v=0;for(const z of Z)v+=(z[j]-m)**2;const sd=Math.sqrt(v/(n-1))||1;for(const z of Z)z[j]=Math.max(-10,Math.min(10,(z[j]-m)/sd));}S.pca=pcaG(Z,25);}
+function runKNN(){const npc=+$("hPc").value;$("hPcOut").textContent=npc;const X=S.pca.scores,n=X.length,K=60;S.knn=[];const ds=new Float64Array(n);for(let i=0;i<n;i++){for(let j=0;j<n;j++)ds[j]=i===j?Infinity:d2(X[i],X[j],npc);const idx=new Int32Array(K).fill(-1),dv=new Float64Array(K).fill(Infinity);for(let j=0;j<n;j++){const d=ds[j];if(d<dv[K-1]){let p=K-1;while(p>0&&dv[p-1]>d){dv[p]=dv[p-1];idx[p]=idx[p-1];p--;}dv[p]=d;idx[p]=j;}}S.knn.push({idx,dv});}}
+function runCluster(){const k=+$("cK").value,res=+$("cRes").value;$("cKOut").textContent=k;$("cResOut").textContent=res.toFixed(1);const n=S.knn.length,mark=new Int32Array(n).fill(-1),A=Array.from({length:n},()=>new Map());for(let i=0;i<n;i++){const ni=S.knn[i].idx.subarray(0,k);for(const j of ni)mark[j]=i;mark[i]=i;for(const j of ni){let inter=0;for(const q of S.knn[j].idx.subarray(0,k))if(mark[q]===i)inter++;const w=inter/(2*k-inter);if(w>=1/15){A[i].set(j,Math.max(A[i].get(j)||0,w));A[j].set(i,Math.max(A[j].get(i)||0,w));}}}S.clu=louvain(A,res,mulberry32(5));
+// annotation par marqueurs : z-score des scores de marqueurs entre clusters
+const nc=Math.max(...S.clu)+1,sc=Array.from({length:nc},()=>new Float64Array(TYPES.length)),cnt=new Float64Array(nc);S.clu.forEach((c,i)=>{cnt[c]++;MARK.forEach((ms,t)=>{let v=0;for(const m of ms)v+=S.lnorm[i][gi[m]];sc[c][t]+=v/ms.length;});});for(let c=0;c<nc;c++)for(let t=0;t<TYPES.length;t++)sc[c][t]/=cnt[c];for(let t=0;t<TYPES.length;t++){let m=0;for(let c=0;c<nc;c++)m+=sc[c][t]/nc;let v=0;for(let c=0;c<nc;c++)v+=(sc[c][t]-m)**2;const sd=Math.sqrt(v/nc)||1;for(let c=0;c<nc;c++)sc[c][t]=(sc[c][t]-m)/sd;}S.cluType=Array.from({length:nc},(_,c)=>{let b=0;for(let t=1;t<TYPES.length;t++)if(sc[c][t]>sc[c][b])b=t;return b;});S.ann=S.clu.map(c=>S.cluType[c]);$("cN").textContent=nc;$("cAri").textContent=ari(S.idx.map(i=>CELLS[i].type),S.clu).toFixed(2);
+S.myo=S.lnorm.map(r=>(r[gi.SFRP4]+r[gi.COL10A1]+r[gi.FNDC1]+r[gi.MATN3])/4);}
+let anim=null;
+function runLayout(){const X=S.pca.scores,n=X.length,nn=15,npc=+$("hPc").value;const W=new Map();for(let i=0;i<n;i++){const ds=[],js=[];for(let q=0;q<nn;q++){js.push(S.knn[i].idx[q]);ds.push(Math.sqrt(S.knn[i].dv[q]));}const rho=ds[0],tgt=Math.log2(nn);let lo=1e-6,hi=1e3,sg=1;for(let it=0;it<50;it++){sg=(lo+hi)/2;let f=0;for(const d of ds)f+=Math.exp(-Math.max(0,d-rho)/sg);if(f>tgt)hi=sg;else lo=sg;}js.forEach((j,q)=>{const w=Math.exp(-Math.max(0,ds[q]-rho)/sg),key=i<j?i*n+j:j*n+i,o=W.get(key);W.set(key,o===undefined?w:o+w-o*w);});}const E=[];for(const[key,w]of W)E.push([Math.floor(key/n),key%n,w]);
+const rx=range(X.map(p=>p[0]),0),ry=range(X.map(p=>p[1]),0);const Y=X.map(p=>[(p[0]-(rx[0]+rx[1])/2)/((rx[1]-rx[0])/2)*3,(p[1]-(ry[0]+ry[1])/2)/((ry[1]-ry[0])/2)*3]);S.Y=Y;const a=1.58,b=0.9,EP=250,rnd=mulberry32(9);let ep=0;if(anim)cancelAnimationFrame(anim);const reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const step=()=>{const until=reduce?EP:Math.min(EP,ep+10);for(;ep<until;ep++){const al=1-ep/EP;for(const[i,j,wt]of E){if(rnd()>wt)continue;const yi=Y[i],yj=Y[j];let dx=yi[0]-yj[0],dy=yi[1]-yj[1],dd=dx*dx+dy*dy;if(dd>0){const gc=-2*a*b*Math.pow(dd,b-1)/(1+a*Math.pow(dd,b));const gx=Math.max(-4,Math.min(4,gc*dx))*al,gy=Math.max(-4,Math.min(4,gc*dy))*al;yi[0]+=gx;yi[1]+=gy;yj[0]-=gx;yj[1]-=gy;}for(let s=0;s<5;s++){const q=Math.floor(rnd()*n);if(q===i)continue;const yq=Y[q];dx=yi[0]-yq[0];dy=yi[1]-yq[1];dd=dx*dx+dy*dy;const gc=2*b/((0.001+dd)*(1+a*Math.pow(dd,b)));yi[0]+=Math.max(-4,Math.min(4,gc*dx))*al;yi[1]+=Math.max(-4,Math.min(4,gc*dy))*al;}}}drawUmap();if(ep<EP)anim=requestAnimationFrame(step);else anim=null;};step();}
+
+/* ---------- dessins du pipeline ---------- */
+let normMode=0,umapMode=0;
+function drawNorm(){if(!S.pRaw)return;const C=CAT(),P=normMode?S.pNorm:S.pRaw,pc1=P.scores.map(s=>s[0]);const rr=corr(pc1,S.lumi);$("nCor").textContent=rr.toFixed(2);const ty=S.idx.map(i=>CELLS[i].type);
+let cv=$("cvNormPc"),o=setup(cv),box={x:52,y:12,w:o.w-66,h:o.h-56};let A=axes(o.g,box,range(S.lumi),range(pc1),"UMI par cellule (log10)","PC1");o.g.globalAlpha=0.5;pc1.forEach((v,i)=>{o.g.fillStyle=C[ty[i]];o.g.beginPath();o.g.arc(A.X(S.lumi[i]),A.Y(v),2.2,0,2*Math.PI);o.g.fill();});o.g.globalAlpha=1;
+cv=$("cvNormPca");o=setup(cv);box={x:40,y:12,w:o.w-54,h:o.h-56};A=axes(o.g,box,range(P.scores.map(s=>s[0])),range(P.scores.map(s=>s[1])),`PC1 (${(P.varExp[0]*100).toFixed(0)} %)`,`PC2 (${(P.varExp[1]*100).toFixed(0)} %)`,{noXTicks:true,noYTicks:true});o.g.globalAlpha=0.55;P.scores.forEach((s,i)=>{o.g.fillStyle=C[ty[i]];o.g.beginPath();o.g.arc(A.X(s[0]),A.Y(s[1]),2.2,0,2*Math.PI);o.g.fill();});o.g.globalAlpha=1;$("normLeg").innerHTML=TYPES.map((t,i)=>`<span><i style="background:var(--c${i+1})"></i>${t}</span>`).join("");}
+function drawHvg(){if(!S.mean)return;const C=CAT(),sel=new Set(S.hvg);let cv=$("cvHvg"),o=setup(cv),box={x:52,y:12,w:o.w-66,h:o.h-56};const xs=NONMITO.map(g=>S.mean[g]),ys=NONMITO.map(g=>S.disp[g]);const A=axes(o.g,box,range(xs),range(ys.filter(isFinite)),"expression moyenne (log CP10k)","log dispersion");NONMITO.forEach((g,j)=>{const on=sel.has(g);o.g.fillStyle=on?C[1]:C[6];o.g.globalAlpha=on?0.95:0.45;o.g.beginPath();o.g.arc(A.X(xs[j]),A.Y(ys[j]),on?3.6:2.6,0,2*Math.PI);o.g.fill();});o.g.globalAlpha=1;
+cv=$("cvElbow");o=setup(cv);box={x:52,y:12,w:o.w-66,h:o.h-56};const ev=S.pca.varExp.map(v=>v*100),npc=+$("hPc").value;const B=axes(o.g,box,[0.5,ev.length+0.5],[0,Math.max(...ev)*1.1],"composante","% de variance");const bw=box.w/ev.length*0.7;ev.forEach((v,i)=>{o.g.fillStyle=i<npc?C[0]:css("--grid");o.g.fillRect(B.X(i+1)-bw/2,B.Y(v),bw,B.Y(0)-B.Y(v));});}
+function drawUmap(){if(!S.Y)return;const C=CAT(),cv=$("cvUmap"),{g,w,h}=setup(cv),box={x:10,y:10,w:w-20,h:h-20},Y=S.Y;const xr=range(Y.map(p=>p[0]),0.04),yr=range(Y.map(p=>p[1]),0.04);const s=Math.min(box.w/(xr[1]-xr[0]),box.h/(yr[1]-yr[0])),ox=box.x+(box.w-(xr[1]-xr[0])*s)/2,oy=box.y+(box.h-(yr[1]-yr[0])*s)/2;g.strokeStyle=css("--line");g.strokeRect(.5,.5,w-1,h-1);const myR=range(S.myo,0),lo=hex(css("--grid")),hi=hex(css("--ssc"));const order=[...Y.keys()];if(umapMode===3)order.sort((a,b)=>S.myo[a]-S.myo[b]);for(const i of order){const c=CELLS[S.idx[i]];let col;if(umapMode===0)col=C[S.ann[i]];else if(umapMode===1)col=C[S.clu[i]%12];else if(umapMode===2)col=c.ssc?css("--ssc"):css("--ctl");else{const u=Math.max(0,Math.min(1,(S.myo[i]-myR[0])/(myR[1]-myR[0])));col=`rgb(${lo.map((v,j)=>Math.round(v+(hi[j]-v)*u))})`;}g.fillStyle=col;g.globalAlpha=umapMode===2?0.6:0.85;g.beginPath();g.arc(ox+(Y[i][0]-xr[0])*s,oy+(Y[i][1]-yr[0])*s,2.6,0,2*Math.PI);g.fill();}g.globalAlpha=1;
+if(umapMode===0){const cen=new Map();Y.forEach((p,i)=>{const t=S.ann[i];const e=cen.get(t)||[0,0,0];e[0]+=p[0];e[1]+=p[1];e[2]++;cen.set(t,e);});g.font="600 12.5px "+css("--body");g.textAlign="center";g.textBaseline="middle";for(const[t,e]of cen){const x=ox+(e[0]/e[2]-xr[0])*s,y=oy+(e[1]/e[2]-yr[0])*s;g.lineWidth=4;g.strokeStyle=css("--panel");g.strokeText(SHORT[t],x,y);g.fillStyle=css("--ink");g.fillText(SHORT[t],x,y);}}
+$("umapLeg").innerHTML=umapMode===0?TYPES.map((t,i)=>`<span><i style="background:var(--c${i+1})"></i>${t}</span>`).join(""):umapMode===1?`<span>${Math.max(...S.clu)+1} clusters de Louvain</span>`:umapMode===2?'<span><i style="background:var(--ctl)"></i>Témoin</span><span><i style="background:var(--ssc)"></i>ScS</span>':'<span>score myofibroblaste = moyenne de SFRP4, COL10A1, FNDC1, MATN3</span><span><i style="background:var(--grid)"></i>bas</span><span><i style="background:var(--ssc)"></i>haut</span>';}
+function drawDot(){if(!S.ann)return;const C=CAT(),cv=$("cvDot"),{g,w,h}=setup(cv);const genes=[...MARK.flat(),"PRSS23","THBS1","COMP"];const present=[...new Set(S.ann)].sort((a,b)=>a-b);const L=130,T=8,B=70,cw=(w-L-10)/genes.length,rh=(h-T-B)/present.length;const stat=present.map(t=>genes.map(gn=>{const g0=gi[gn];let m=0,f=0,n=0;S.ann.forEach((a,i)=>{if(a===t){const v=S.lnorm[i][g0];m+=v;if(v>0)f++;n++;}});return[m/n,f/n];}));const gmax=genes.map((_,j)=>Math.max(...stat.map(r=>r[j][0]))||1);const lo=hex(css("--grid")),hi=hex(css("--c2"));present.forEach((t,ri)=>{g.fillStyle=css("--ink");g.font="12.5px "+css("--body");g.textAlign="right";g.textBaseline="middle";g.fillText(TYPES[t],L-8,T+ri*rh+rh/2);genes.forEach((gn,j)=>{const[m,f]=stat[ri][j],u=Math.max(0,m/gmax[j]);g.fillStyle=`rgb(${lo.map((v,k)=>Math.round(v+(hi[k]-v)*u))})`;g.beginPath();g.arc(L+j*cw+cw/2,T+ri*rh+rh/2,Math.max(0.5,Math.min(cw,rh)*0.45*Math.sqrt(f)),0,2*Math.PI);g.fill();});});genes.forEach((gn,j)=>{g.save();g.translate(L+j*cw+cw/2,h-B+8);g.rotate(-Math.PI/3);g.fillStyle=PROG.includes(gn)?C[1]:css("--muted");g.font="italic 11.5px "+css("--body");g.textAlign="right";g.textBaseline="middle";g.fillText(gn,0,0);g.restore();});}
+
+/* ---------- Étapes 6 et 7 ---------- */
+function perSampleType(){const n=SAMPLES.length;const tot=new Float64Array(n),cnt=Array.from({length:n},()=>new Float64Array(TYPES.length));const sums=Array.from({length:TYPES.length},()=>SAMPLES.map(()=>new Float64Array(G)));const ncell=Array.from({length:TYPES.length},()=>new Float64Array(n));S.idx.forEach((ci,i)=>{const c=CELLS[ci],t=S.ann[i];tot[c.s]++;cnt[c.s][t]++;ncell[t][c.s]++;const sm=sums[t][c.s];for(let g=0;g<G;g++)sm[g]+=c.cnt[g];});return{tot,cnt,sums,ncell};}
+function drawCompo(){if(!S.ann)return;const{tot,cnt}=perSampleType();const present=[...new Set(S.ann)].sort((a,b)=>a-b);const cv=$("cvCompo"),{g,w,h}=setup(cv),box={x:52,y:12,w:w-66,h:h-70};const vals=present.map(t=>SAMPLES.map((S0,s)=>100*cnt[s][t]/tot[s]));const ymax=Math.max(...vals.flat())*1.08;const{Y}=axes(g,box,[0,1],[0,ymax],"","% des cellules de la biopsie",{noXTicks:true,yfmt:v=>fmt(v)});const bw=box.w/present.length;const rnd=mulberry32(4);present.forEach((t,k)=>{const x0=box.x+k*bw;[0,1].forEach(grp=>{const xs=x0+bw*(grp?0.68:0.32);const vs=SAMPLES.map((S0,s)=>S0.ssc===grp?vals[k][s]:null).filter(v=>v!==null);g.fillStyle=grp?css("--ssc"):css("--ctl");vs.forEach(v=>{g.beginPath();g.arc(xs+(rnd()-0.5)*bw*0.2,Y(v),3.6,0,2*Math.PI);g.fill();});const m=vs.reduce((a,b)=>a+b,0)/vs.length;g.strokeStyle=g.fillStyle;g.lineWidth=2.4;g.beginPath();g.moveTo(xs-bw*0.14,Y(m));g.lineTo(xs+bw*0.14,Y(m));g.stroke();});g.fillStyle=css("--ink");g.font="12px "+css("--body");g.textAlign="center";g.textBaseline="top";g.fillText(SHORT[t],x0+bw/2,box.y+box.h+8);});}
+let PB=null;
+function computePB(){const{sums,ncell}=perSampleType();PB={types:[],res:{}};const ctl=SAMPLES.map((S0,s)=>!S0.ssc),ssc=SAMPLES.map(S0=>S0.ssc===1);for(let t=0;t<TYPES.length;t++){const okC=[],okS=[];SAMPLES.forEach((S0,s)=>{if(ncell[t][s]>=3){(S0.ssc?okS:okC).push(s);}});if(okC.length<3||okS.length<3)continue;const lc=sums[t].map(logcpm);const T=modT(sub(okC.map(s=>lc[s])),sub(okS.map(s=>lc[s])));PB.types.push(t);PB.res[t]={T,lc,okC,okS,nde:Array.from(T.q).filter(q=>q<0.05).length};}$("pBulk").textContent=BULK.nde;$("pFib").textContent=PB.res[1]?PB.res[1].nde:"–";drawPB();}
+function drawPB(){if(!PB)return;const C=CAT();let cv=$("cvDegBar"),o=setup(cv),box={x:52,y:12,w:o.w-66,h:o.h-62};const bars=[["Bulk",BULK.nde,css("--muted")],...PB.types.map(t=>[SHORT[t],PB.res[t].nde,C[t]])];const ymax=Math.max(5,...bars.map(b=>b[1]))*1.15;const A=axes(o.g,box,[0,1],[0,ymax],"","gènes différentiels",{noXTicks:true});const bw=box.w/bars.length;bars.forEach(([lab,v,col],k)=>{const x0=box.x+k*bw+bw*0.18;o.g.fillStyle=col;o.g.fillRect(x0,A.Y(v),bw*0.64,A.Y(0)-A.Y(v));o.g.fillStyle=css("--ink");o.g.font="600 12.5px "+css("--mono");o.g.textAlign="center";o.g.textBaseline="bottom";o.g.fillText(v,x0+bw*0.32,A.Y(v)-3);o.g.font="12px "+css("--body");o.g.textBaseline="top";o.g.fillText(lab,x0+bw*0.32,box.y+box.h+8);});
+// strip plots du gène choisi
+const gname=$("pGene").value,g0=gi[gname],jj=NONMITO.indexOf(g0);cv=$("cvStrip");o=setup(cv);const panels=[["Bulk",BULK.lc,SAMPLES.map((S0,s)=>s).filter(s=>!SAMPLES[s].ssc),SAMPLES.map((S0,s)=>s).filter(s=>SAMPLES[s].ssc),BULK.T.q[jj]],...PB.types.map(t=>[SHORT[t],PB.res[t].lc,PB.res[t].okC,PB.res[t].okS,PB.res[t].T.q[jj]])];const pw=(o.w-50)/panels.length,top=12,bot=56,ph=o.h-top-bot;let all=[];panels.forEach(p=>{p[2].concat(p[3]).forEach(s=>all.push(p[1][s][g0]));});const yr=range(all,0.12);const Y=v=>top+ph-(v-yr[0])/(yr[1]-yr[0])*ph;o.g.strokeStyle=css("--grid");o.g.fillStyle=css("--muted");o.g.font="12px "+css("--mono");o.g.textAlign="right";o.g.textBaseline="middle";for(const t of niceTicks(yr[0],yr[1],4)){o.g.beginPath();o.g.moveTo(44,Y(t));o.g.lineTo(o.w-4,Y(t));o.g.stroke();o.g.fillText(fmt(t),40,Y(t));}const rnd=mulberry32(8);panels.forEach(([lab,lc,okC,okS,q],k)=>{const x0=46+k*pw;o.g.strokeStyle=css("--line");o.g.strokeRect(x0+2,top,pw-4,ph);[[okC,css("--ctl"),0.3],[okS,css("--ssc"),0.7]].forEach(([ids,col,f])=>{o.g.fillStyle=col;let m=0;ids.forEach(s=>{const v=lc[s][g0];m+=v/ids.length;o.g.beginPath();o.g.arc(x0+pw*f+(rnd()-0.5)*pw*0.16,Y(v),3.4,0,2*Math.PI);o.g.fill();});o.g.strokeStyle=col;o.g.lineWidth=2.2;o.g.beginPath();o.g.moveTo(x0+pw*f-pw*0.12,Y(m));o.g.lineTo(x0+pw*f+pw*0.12,Y(m));o.g.stroke();});o.g.fillStyle=k===0?css("--ink"):C[PB.types[k-1]];o.g.font="600 12px "+css("--body");o.g.textAlign="center";o.g.textBaseline="top";o.g.fillText(lab,x0+pw/2,top+ph+6);o.g.fillStyle=q<0.05?css("--accent"):css("--muted");o.g.font="11.5px "+css("--mono");o.g.fillText(q<0.001?"<0,001":q.toFixed(q<0.1?3:2).replace(".",","),x0+pw/2,top+ph+24);});o.g.save();o.g.translate(12,top+ph/2);o.g.rotate(-Math.PI/2);o.g.fillStyle=css("--ink");o.g.font="13px "+css("--body");o.g.textAlign="center";o.g.fillText(gname+" (log2 CPM)",0,0);o.g.restore();
+const fib=PB.res[1];if(fib){const progSig=PROG.filter(p=>fib.T.q[NONMITO.indexOf(gi[p])]<0.05).length,progBulk=PROG.filter(p=>BULK.T.q[NONMITO.indexOf(gi[p])]<0.05).length;$("reveal").innerHTML=`<b>Le signal était là.</b> En bulk : ${BULK.nde} gène${BULK.nde>1?"s":""} différentiel${BULK.nde>1?"s":""}, dont ${progBulk} du programme fibrosant. Dans les seuls fibroblastes SFRP2+ : ${fib.nde} gènes, dont ${progSig} sur ${PROG.length} du programme fibrosant (PRSS23, THBS1, TNC, COMP…). Et une population, les myofibroblastes SFRP4+, est quasi absente chez les témoins. Deux populations voisines, un progéniteur activé et sa descendance différenciée, portent la physiopathologie de la fibrose cutanée ; le bulk les avait diluées dans l'épiderme.`;}}
+// liste des gènes
+$("pGene").innerHTML=[["Programme fibrosant",PROG],["Myofibroblastes",["SFRP4","COL10A1","FNDC1","MATN3","ACTA2"]],["Marqueurs fibroblastes",["SFRP2","DPP4","PI16","FMO1","MYOC"]],["Autres marqueurs",["KRT14","PECAM1","CD68","CD3E","PMEL"]]].map(([lab,gs])=>`<optgroup label="${lab}">${gs.map(x=>`<option${x==="PRSS23"?" selected":""}>${x}</option>`).join("")}</optgroup>`).join("");
+$("pGene").addEventListener("change",drawPB);
+
+/* ---------- orchestration ---------- */
+function setBusy(t){$("busy").textContent=t;}
+function fromCluster(){runCluster();drawUmap();drawDot();drawCompo();computePB();}
+function fromKNN(){runKNN();fromCluster();runLayout();}
+function fromPCA(){runPCA();drawHvg();fromKNN();}
+function all(){setBusy("Calcul en cours…");setTimeout(()=>{runQC();drawNorm();fromPCA();setBusy("");},20);}
+$("qApply").addEventListener("click",all);
+let tH=null;$("hN").addEventListener("input",()=>{$("hNOut").textContent=$("hN").value;clearTimeout(tH);tH=setTimeout(fromPCA,120);});
+let tP=null;$("hPc").addEventListener("input",()=>{$("hPcOut").textContent=$("hPc").value;drawHvg();clearTimeout(tP);tP=setTimeout(fromKNN,120);});
+let tC=null;["cK","cRes"].forEach(id=>$(id).addEventListener("input",()=>{$("cKOut").textContent=$("cK").value;$("cResOut").textContent=(+$("cRes").value).toFixed(1);clearTimeout(tC);tC=setTimeout(fromCluster,100);}));
+seg([$("nRaw"),$("nNorm")],i=>{normMode=i;drawNorm();});seg([$("uAnn"),$("uClu"),$("uCond"),$("uMyo")],i=>{umapMode=i;drawUmap();});
+redraw.push(drawNorm,drawHvg,drawUmap,drawDot,drawCompo,drawPB);
+drawQC();all();
+})();
+</script>
+
+</body></html>
